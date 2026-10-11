@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field, status_chip, stage_chip, avatar with context %}{% from "_icons.html" import icon %}
+{% block title %}{{ company.name }}{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:20px"><div class="hero">
+  {{ avatar(company.name, "lg") }}
+  <div class="grow"><h1>{{ company.name }}</h1>
+    <div class="sub">{% if company.domain %}<span class="mono">{{ company.domain }}</span>
+      {% if company.mx_ok is sameas false %}<span class="chip invalid">no mail server</span>{% elif company.mx_ok %}<span class="chip valid">mail server found</span>{% endif %}
+      {% else %}<span>No email domain yet</span>{% endif %}
+      {% if company.size %}<span>· {{ company.size }} people</span>{% endif %}{% if company.funding_stage %}<span>· {{ company.funding_stage }}</span>{% endif %}</div></div>
+  <div class="actions">{% if company.linkedin_url %}<a class="btn" href="{{ company.linkedin_url }}" target="_blank" rel="noopener">{{ icon("linkedin") }}LinkedIn</a>{% endif %}
+    {% if company.website %}<a class="btn" href="{{ company.website if company.website.startswith('http') else 'https://' ~ company.website }}" target="_blank" rel="noopener">{{ icon("external") }}Website</a>{% endif %}</div>
+</div></div>
+
+<div class="layout-2">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><div><h2>People</h2><p>{{ contacts|length }} contact{{ "" if contacts|length == 1 else "s" }} here</p></div><a class="btn sm" href="/contacts/new">{{ icon("plus") }}Add</a></div>
+      {% for c in contacts %}
+        <a class="list-row" href="/contacts/{{ c.id }}">{{ avatar(c.full_name) }}<div class="grow"><div style="font-weight:600">{{ c.full_name }}</div><div class="cell-sub">{{ c.title or "" }}</div></div>
+          <div style="text-align:right">{{ stage_chip(c.stage) }}{% if c.email %}<div class="cell-sub mono">{{ c.email }}</div>{% endif %}</div></a>
+      {% else %}<div class="empty">No one yet.</div>{% endfor %}
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Known addresses</h2><p>Real addresses at {{ company.domain or "this domain" }} (website, press page, GitHub, a signature). Each one teaches QL the naming pattern.</p></div></div>
+      {% for k in known %}<div class="list-row"><div class="grow"><div style="font-weight:600">{{ k.full_name }}</div><div class="cell-sub mono">{{ k.address }}</div></div><span class="cell-sub">{{ k.source or "" }}</span></div>
+      {% endfor %}
+      {% if company.domain %}
+      <form class="card-body" method="post" action="/companies/{{ company.id }}/known" style="border-top:1px solid var(--line-2)">{{ csrf_field() }}
+        <div class="grid-2"><div class="field"><label>Their name</label><input type="text" name="full_name" required></div>
+          <div class="field"><label>Their address</label><input type="email" name="address" required></div></div>
+        <div class="field"><label>Where you saw it</label><input type="text" name="source" placeholder="press page"></div>
+        <button class="btn">{{ icon("plus") }}Add address</button>
+      </form>{% else %}<div class="card-body muted small">Add the domain first.</div>{% endif %}
+    </div>
+  </div>
+
+  <form class="card" method="post" action="/companies/{{ company.id }}">{{ csrf_field() }}
+    <div class="card-head"><h2>Details</h2></div>
+    <div class="card-body">
+      <div class="field"><label>Name</label><input type="text" name="name" value="{{ company.name }}" required></div>
+      <div class="field"><label>Email domain</label><input type="text" name="domain" id="domain" value="{{ company.domain or '' }}" placeholder="acme.com">
+        {% if suggestions %}<span class="help">Likely domains with a working mail server. Click one, then save:</span>
+          <div class="suggest">{% for s in suggestions %}<button type="button" class="btn sm" onclick="document.getElementById('domain').value='{{ s.domain }}'">{{ s.domain }}</button>{% endfor %}</div>
+        {% elif request.query_params.get("suggest") %}<span class="help">No guess has a mail server. Check the company's website footer or contact page.</span>
+        {% else %}<a class="small" href="/companies/{{ company.id }}?suggest=1" data-note="Looking up likely domains and their mail servers…">Suggest domains</a>{% endif %}</div>
+      <div class="field"><label>Website</label><input type="text" name="website" value="{{ company.website or '' }}"></div>
+      <div class="grid-2">
+        <div class="field"><label>Size</label><input type="text" name="size" value="{{ company.size or '' }}"></div>
+        <div class="field"><label>Funding stage</label><input type="text" name="funding_stage" value="{{ company.funding_stage or '' }}"></div>
+      </div>
+      <div class="field"><label>Open roles</label><input type="text" name="open_roles" value="{{ company.open_roles or '' }}"></div>
+      <div class="field"><label>Notes</label><input type="text" name="notes" value="{{ company.notes or '' }}"><span class="help">The draft writer can use these.</span></div>
+    </div>
+    <div class="card-foot"><button class="btn primary">Save</button></div>
+  </form>
+  {% if not contacts %}
+  <form method="post" action="/companies/{{ company.id }}/delete" style="margin-top:12px">{{ csrf_field() }}
+    <button class="btn sm danger">{{ icon("x") }}Delete this company</button></form>
+  {% endif %}
+</div>
+{% endblock %}

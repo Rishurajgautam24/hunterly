@@ -1,0 +1,78 @@
+{% extends "base.html" %}{% from "_macros.html" import status_chip, stage_chip, avatar with context %}{% from "_icons.html" import icon %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{% if profile.my_name %}Hi {{ profile.my_name.split()[0] }}{% else %}Dashboard{% endif %}</h1>
+    <p>{{ followups|length }} follow-up{{ "" if followups|length == 1 else "s" }} due · {{ board.ready.count }} ready to email · {{ board.new.count }} need an email</p></div>
+  <div class="actions">
+    <a class="btn" href="/companies">{{ icon("upload") }}Import companies</a>
+    <a class="btn primary" href="/contacts/new">{{ icon("plus") }}Add contact</a>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="card kpi"><div class="label">{{ icon("send") }}Emails sent</div>
+    <div class="value">{{ stats.sent_this_week }} <small>this week</small></div>
+    <div class="hint">{{ stats.emails_sent }} in total · {{ stats.contacted }} {{ "person" if stats.contacted == 1 else "people" }}</div></div>
+  <div class="card kpi"><div class="label">{{ icon("reply") }}Reply rate</div>
+    <div class="value">{{ stats.reply_rate if stats.reply_rate is not none else "–" }}{% if stats.reply_rate is not none %}<small>%</small>{% endif %}</div>
+    <div class="hint">{{ stats.replied }} of {{ stats.contacted }} replied · aim for 10%+</div>
+    <div class="bar"><span style="width: {{ [stats.reply_rate or 0, 100]|min }}%"></span></div></div>
+  <div class="card kpi"><div class="label">{{ icon("alert") }}Bounce rate</div>
+    <div class="value">{{ stats.bounce_rate if stats.bounce_rate is not none else "–" }}{% if stats.bounce_rate is not none %}<small>%</small>{% endif %}</div>
+    <div class="hint">keep under 2% to protect your Gmail</div>
+    <div class="bar warn"><span style="width: {{ [(stats.bounce_rate or 0) * 10, 100]|min }}%"></span></div></div>
+  <div class="card kpi"><div class="label">{{ icon("clock") }}Today's limits</div>
+    <div class="hint" style="margin-top:8px">LinkedIn captures · {{ stats.captures_24h }}/{{ settings.daily_capture_cap }}</div>
+    <div class="bar"><span style="width: {{ (100 * stats.captures_24h / settings.daily_capture_cap)|round }}%"></span></div>
+    <div class="hint" style="margin-top:10px">First emails sent · {{ stats.first_emails_24h }}/{{ settings.daily_first_email_cap }}</div>
+    <div class="bar"><span style="width: {{ (100 * stats.first_emails_24h / settings.daily_first_email_cap)|round }}%"></span></div></div>
+</div>
+
+<div class="layout-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-head"><div><h2>Follow-ups due</h2><p>Message 2 goes on day {{ settings.followup_days[0] }}, message 3 on day {{ settings.followup_days[-1] }}</p></div></div>
+    {% for f in followups %}
+      <a class="list-row" href="/contacts/{{ f.contact.id }}">{{ avatar(f.contact.full_name) }}
+        <div class="grow"><div style="font-weight:600">{{ f.contact.full_name }}</div>
+          <div class="cell-sub">{{ f.contact.title or "" }}{% if f.company %} · {{ f.company.name }}{% endif %}</div></div>
+        <div style="text-align:right"><div class="small">Message {{ f.step }} of 3</div>
+          <div class="due">{% if f.overdue_days %}{{ f.overdue_days }} day{{ "" if f.overdue_days == 1 else "s" }} late{% else %}due today{% endif %}</div></div></a>
+    {% else %}
+      <div class="empty">{{ icon("check") }}<div>Nothing due. Follow-ups show up here automatically.</div></div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Setup</h2></div>
+    <div class="card-body" style="display:grid;gap:10px">
+      {% for done, text, link in setup %}
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="dot {{ 'on' if done else 'off' }}"></span>
+          <span class="grow {{ 'muted' if done }}">{{ text }}</span>
+          {% if not done and link %}<a class="btn sm" href="{{ link }}">Fix</a>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><div><h2>Pipeline</h2><p>Everyone you're working on, by stage</p></div><a class="btn sm ghost" href="/contacts">All contacts</a></div>
+  <div class="card-body">
+    <div class="board">
+      {% for key in ["new", "ready", "contacted", "replied"] %}{% set col = board[key] %}
+      <div class="col">
+        <div class="col-head">{{ stage_labels[key] }} <span>{{ col.count }}</span></div>
+        {% for c in col.people %}
+          <a class="person" href="/contacts/{{ c.id }}">{{ avatar(c.full_name) }}
+            <div class="who"><div class="name">{{ c.full_name }}</div>
+              <div class="meta">{{ companies.get(c.company_id, c.title or "") }}</div>
+              {% if key == "ready" %}<div style="margin-top:4px">{{ status_chip(c.email_status) }}</div>{% endif %}</div></a>
+        {% else %}<div class="empty">None yet</div>{% endfor %}
+        {% if col.count > col.people|length %}<a class="small" href="/contacts?stage={{ key }}">+{{ col.count - col.people|length }} more</a>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

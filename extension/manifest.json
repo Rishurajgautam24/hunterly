@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "QL Capture",
+  "version": "0.1.0",
+  "description": "Personal job-search helper: capture the LinkedIn profile you're viewing, on click, into your local QL tracker.",
+  "action": { "default_title": "Open QL" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "scripting", "storage"],
+  "host_permissions": ["https://www.linkedin.com/*", "http://127.0.0.1:8765/*"]
+}

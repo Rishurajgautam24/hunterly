@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+*.db
+credentials.json
+gmail_token.json
+secret.txt
+.DS_Store
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+.idea/
+.vscode/
+Claude outputs/
+.claude/

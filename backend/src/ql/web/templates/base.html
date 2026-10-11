@@ -1,0 +1,70 @@
+{% from "_icons.html" import icon %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}QL{% endblock %} · QL</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="topbar"></div>
+<div id="busyNote" class="busy-note" role="status" aria-live="polite"></div>
+{% set path = request.url.path %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="logo">QL</span><span>QL<small>Job search outreach</small></span></a>
+    <nav class="nav">
+      <a href="/" class="{{ 'active' if path == '/' }}">{{ icon("home") }}Dashboard{% if nav_due %}<span class="count">{{ nav_due }} due</span>{% endif %}</a>
+      <a href="/contacts" class="{{ 'active' if path.startswith('/contacts') and path != '/contacts/new' }}">{{ icon("users") }}Contacts</a>
+      <a href="/companies" class="{{ 'active' if path.startswith('/companies') }}">{{ icon("building") }}Companies</a>
+      <a href="/contacts/new" class="{{ 'active' if path == '/contacts/new' }}">{{ icon("user-plus") }}Add contact</a>
+      <a href="/settings" class="{{ 'active' if path == '/settings' }}">{{ icon("settings") }}Settings</a>
+    </nav>
+    <div class="services">
+      <div><span class="dot {{ 'on' if ollama_ok else 'off' }}"></span>Drafts: {{ "Ollama ready" if ollama_ok else "template only" }}</div>
+      <div><span class="dot {{ 'on' if gmail_ok else 'off' }}"></span>Gmail: {{ "connected" if gmail_ok else "compose links" }}</div>
+      <div><span class="dot on"></span>Checks: {{ "verifier VM" if verifier_remote else "this Mac" }}</div>
+    </div>
+  </aside>
+  <main class="content">
+    {% if msg %}<div class="toast">{{ icon("info") }}<div>{{ msg }}</div></div>{% endif %}
+    {% if err %}<div class="toast err">{{ icon("alert") }}<div>{{ err }}</div></div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+// Loading states: every form shows what it's doing, and can't be sent twice.
+document.addEventListener("submit", (e) => {
+  const form = e.target, btn = e.submitter;
+  if (form.dataset.sending === "1") { e.preventDefault(); return; }
+  form.dataset.sending = "1";
+  if (btn && btn.name) {           // a disabled button isn't sent, so carry its value along
+    const h = document.createElement("input");
+    h.type = "hidden"; h.name = btn.name; h.value = btn.value; form.appendChild(h);
+  }
+  const label = (btn && btn.dataset.busy) || form.dataset.busy || "Working…";
+  if (btn) {
+    btn.disabled = true; btn.classList.add("loading");
+    const spin = document.createElement("span"); spin.className = "spin";
+    btn.replaceChildren(spin, document.createTextNode(label));
+  }
+  document.body.classList.add("busy");
+  const note = (btn && btn.dataset.note) || form.dataset.note;
+  if (note) { const n = document.getElementById("busyNote"); n.textContent = note; n.classList.add("show"); }
+});
+window.addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); });
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-note]");
+  if (!a || e.metaKey || e.ctrlKey) return;
+  document.body.classList.add("busy");
+  const n = document.getElementById("busyNote"); n.textContent = a.dataset.note; n.classList.add("show");
+});
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  navigator.clipboard.writeText(b.dataset.copy).then(() => {
+    const old = b.innerHTML; b.textContent = "Copied"; setTimeout(() => (b.innerHTML = old), 1200);
+  });
+});
+</script>
+</body>
+</html>

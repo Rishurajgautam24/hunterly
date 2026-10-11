@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field, avatar with context %}{% from "_icons.html" import icon %}
+{% block title %}Companies{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Companies</h1><p>Your target list. Each needs an email domain before QL can find addresses there.</p></div>
+  <div class="actions"><a class="btn" href="/export/companies.csv">{{ icon("download") }}Export CSV</a></div></div>
+<div class="card" style="margin-bottom:20px">
+  {% if companies %}
+  <table class="table">
+    <thead><tr><th>Company</th><th>Email domain</th><th>Size</th><th>Open roles</th><th>Contacts</th></tr></thead><tbody>
+    {% for c in companies %}
+      <tr><td><div class="who">{{ avatar(c.name, "sm") }}<div><a href="/companies/{{ c.id }}">{{ c.name }}</a>
+            {% if c.funding_stage %}<div class="cell-sub">{{ c.funding_stage }}</div>{% endif %}</div></div></td>
+        <td>{% if c.domain %}<span class="mono">{{ c.domain }}</span>
+              {% if c.mx_ok is sameas false %} <span class="chip invalid">no mail server</span>{% elif c.mx_ok %} <span class="chip valid">mail ok</span>{% endif %}
+            {% else %}<a class="btn sm" href="/companies/{{ c.id }}?suggest=1" data-note="Looking up likely domains and their mail servers…">Find domain</a>{% endif %}</td>
+        <td class="cell-sub">{{ c.size or "–" }}</td><td class="cell-sub">{{ c.open_roles or "–" }}</td>
+        <td>{{ counts.get(c.id, 0) }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  {% else %}<div class="empty">{{ icon("building") }}<div>No companies yet. Add one below, import a CSV, or capture someone from LinkedIn.</div></div>{% endif %}
+</div>
+<div class="layout-2">
+  <form class="card" method="post" action="/companies">{{ csrf_field() }}
+    <div class="card-head"><h2>Add a company</h2></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field"><label>Name</label><input type="text" name="name" required></div>
+        <div class="field"><label>Email domain</label><input type="text" name="domain" placeholder="acme.com"></div>
+        <div class="field"><label>Size</label><input type="text" name="size" placeholder="51-200"></div>
+        <div class="field"><label>Funding stage</label><input type="text" name="funding_stage" placeholder="Series A"></div>
+      </div>
+      <div class="field"><label>Open roles</label><input type="text" name="open_roles" placeholder="Backend Engineer"></div>
+      <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Just raised; launching in SEA"></div>
+    </div>
+    <div class="card-foot"><button class="btn primary">{{ icon("plus") }}Add company</button></div>
+  </form>
+  <form class="card" method="post" action="/companies/import" enctype="multipart/form-data">{{ csrf_field() }}
+    <div class="card-head"><h2>Import a CSV</h2></div>
+    <div class="card-body">
+      <p class="small muted" style="margin-top:0">A header row with any of: <code>name</code>, <code>domain</code>, <code>size</code>, <code>funding_stage</code>, <code>open_roles</code>, <code>website</code>, <code>notes</code>. Only name is required; existing companies are updated, not duplicated.</p>
+      <input type="file" name="file" accept=".csv" required>
+    </div>
+    <div class="card-foot"><button class="btn" data-busy="Importing…">{{ icon("upload") }}Import</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field with context %}{% from "_icons.html" import icon %}
+{% block title %}Add contact{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Add a contact</h1><p>Faster: open their LinkedIn profile with the QL extension and it fills this in for you.</p></div></div>
+<div class="layout-2">
+<form class="card" method="post" action="/contacts">{{ csrf_field() }}
+  <div class="card-body">
+    <div class="grid-2">
+      <div class="field"><label>Full name</label><input type="text" name="full_name" required autofocus></div>
+      <div class="field"><label>Title</label><input type="text" name="title" placeholder="Engineering Manager"></div>
+      <div class="field"><label>Company</label><input type="text" name="company_name" list="companies">
+        <datalist id="companies">{% for n in company_names %}<option value="{{ n }}">{% endfor %}</datalist></div>
+      <div class="field"><label>Company email domain</label><input type="text" name="domain" placeholder="acme.com"></div>
+      <div class="field"><label>LinkedIn URL</label><input type="text" name="linkedin_url" placeholder="linkedin.com/in/..."></div>
+      <div class="field"><label>Location</label><input type="text" name="location"></div>
+    </div>
+    <div class="field"><label>Something specific about them</label><input type="text" name="notes" placeholder="Spoke at PyCon India about their data platform">
+      <span class="help">The draft writer opens with this, so the email doesn't feel generic.</span></div>
+  </div>
+  <div class="card-foot"><button class="btn primary">{{ icon("plus") }}Add contact</button></div>
+</form>
+<div class="card"><div class="card-head"><h2>Who to pick</h2></div><div class="card-body small" style="display:grid;gap:8px">
+  <div>Hiring managers and team leads reply more often than recruiters.</div>
+  <div>At startups under Series B, the founder or CTO.</div>
+  <div>Two people per company roughly doubles your chance of a reply.</div></div></div>
+</div>
+{% endblock %}

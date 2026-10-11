@@ -1,0 +1,161 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field, status_chip, stage_chip, avatar with context %}{% from "_icons.html" import icon %}
+{% block title %}{{ contact.full_name }}{% endblock %}
+{% block content %}
+{% set flow = ["new", "ready", "contacted", "replied"] %}
+{% set at = flow.index(contact.stage) if contact.stage in flow else -1 %}
+{% set can_email = not contact.do_not_contact and contact.stage not in ("replied", "closed") %}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="hero">
+    {{ avatar(contact.full_name, "lg") }}
+    <div class="grow">
+      <h1>{{ contact.full_name }} {{ stage_chip(contact.stage) }}{% if contact.do_not_contact %}<span class="chip invalid">do not contact</span>{% endif %}</h1>
+      <div class="sub">
+        <span>{{ contact.title or contact.headline or "No title" }}</span>
+        {% if company %}<span>·</span><a href="/companies/{{ company.id }}">{{ company.name }}</a>{% endif %}
+        {% if contact.location %}<span>·</span><span>{{ contact.location }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="actions">
+      {% if contact.linkedin_url %}<a class="btn" href="{{ contact.linkedin_url }}" target="_blank" rel="noopener">{{ icon("linkedin") }}LinkedIn</a>{% endif %}
+    </div>
+  </div>
+  <div class="stepper">
+    {% for s in flow %}<div class="step {{ 'done' if at >= loop.index0 }}"><div class="line"></div><span>{{ stage_labels[s] }}</span></div>{% endfor %}
+  </div>
+</div>
+
+{% if followup and can_email %}<div class="toast">{{ icon("clock") }}<div>Follow-up {{ followup.step }} of 3 is due. Write it below.</div></div>{% endif %}
+
+<div class="layout-2">
+  <div class="stack">
+    <!-- Email -->
+    <div class="card" id="email">
+      <div class="card-head"><div><h2>Email address</h2><p>Type it if you know it, or let QL find and check it</p></div>
+        {{ status_chip(contact.email_status) }}</div>
+      <div class="card-body">
+        <form method="post" action="/contacts/{{ contact.id }}/email">{{ csrf_field() }}
+          <div class="email-edit">
+            <input type="email" name="address" class="mono" value="{{ contact.email or '' }}" placeholder="name@{{ company.domain if company and company.domain else 'company.com' }}" required>
+            {% if contact.email %}<button class="btn" type="button" data-copy="{{ contact.email }}" title="Copy">{{ icon("copy") }}</button>{% endif %}
+            <button class="btn primary" data-busy="Saving…" data-note="Saving the address and checking it with their mail server (up to 30 seconds).">{{ icon("check") }}Save</button>
+          </div>
+          <div class="checks">
+            <label><input type="checkbox" name="check" value="1" checked> Check it with their mail server</label>
+            <label><input type="checkbox" name="learn" value="1"> I know it's right: learn {{ company.name if company else "the company" }}'s email pattern from it</label>
+          </div>
+        </form>
+
+        <div class="divider"><span>or let QL find it</span></div>
+        {% if not company or not company.domain %}
+          <div class="toast err" style="margin-bottom:14px">{{ icon("alert") }}<div>Set the company's email domain first{% if company %} on <a href="/companies/{{ company.id }}?suggest=1" data-note="Looking up likely domains and their mail servers…">{{ company.name }}'s page</a>{% endif %}.</div></div>
+        {% endif %}
+        <div class="actions">
+          <form class="inline" method="post" action="/contacts/{{ contact.id }}/find">{{ csrf_field() }}<input type="hidden" name="check" value="1">
+            <button class="btn" data-busy="Checking…" data-note="Asking the company's mail server about each guess. This can take up to 30 seconds.">{{ icon("search") }}{{ "Find again" if contact.email else "Find and check email" }}</button></form>
+          <form class="inline" method="post" action="/contacts/{{ contact.id }}/find">{{ csrf_field() }}<input type="hidden" name="check" value="0">
+            <button class="btn ghost" title="Rank guesses by pattern without contacting the mail server">Guess only</button></form>
+        </div>
+        {% if candidates %}
+        <details class="more" {{ "open" if not contact.email }}>
+          <summary>{{ "The 1 guess" if candidates|length == 1 else "All " ~ candidates|length ~ " guesses" }} ▾</summary>
+          <table class="table" style="margin-top:6px">
+            <thead><tr><th>Address</th><th>Pattern</th><th>Result</th><th></th></tr></thead><tbody>
+            {% for c in candidates %}<tr>
+              <td class="mono">{{ c.address }}</td><td class="cell-sub mono">{{ c.pattern }}</td>
+              <td>{{ status_chip(c.status) }}{% if c.detail %}<div class="cell-sub">{{ c.detail[:70] }}</div>{% endif %}</td>
+              <td style="text-align:right">{% if c.address != contact.email and c.status != "invalid" %}
+                <form class="inline" method="post" action="/contacts/{{ contact.id }}/choose">{{ csrf_field() }}
+                  <input type="hidden" name="candidate_id" value="{{ c.id }}"><button class="btn sm">Use</button></form>{% elif c.address == contact.email %}<span class="chip plain stage-ready">chosen</span>{% endif %}</td></tr>
+            {% endfor %}</tbody>
+          </table>
+          <p class="cell-sub">valid: server confirmed · accept-all: server accepts every address, so it's the best guess · unknown: no answer (greylisting, blocking or port 25)</p>
+        </details>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Outreach -->
+    <div class="card">
+      <div class="card-head"><div><h2>Outreach</h2><p>Up to 3 messages. Nothing is sent from QL; you send from Gmail.</p></div></div>
+      <div class="card-body">
+        {% set sent_list = history|selectattr("sent_at")|list %}
+        {% if sent_list %}
+          <ul class="timeline" style="margin-bottom:16px">
+          {% for o in sent_list %}<li><div class="t">Message {{ o.step }} · {{ o.subject }}</div>
+            <div class="s">Sent {{ o.sent_at|local }} to {{ o.to_address }}{% if o.outcome %} · <strong>{{ o.outcome }}</strong>{% endif %}</div></li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if current and can_email %}
+        <form method="post" action="/outreach/{{ current.id }}">{{ csrf_field() }}
+          <div class="cell-sub" style="margin-bottom:10px">{{ icon("sparkles") }} Draft for message {{ current.step }} of 3 to <span class="mono">{{ current.to_address }}</span>, written by {{ "your local model" if current.draft_source == "ollama" else "the template" }}</div>
+          <div class="field"><label>Subject</label><input type="text" name="subject" value="{{ current.subject }}"></div>
+          <div class="field"><label>Message</label><textarea name="body">{{ current.body }}</textarea>
+            {% if placeholder in current.body or placeholder in current.subject %}<span class="warn-text">Replace every [[gap]] before sending.</span>{% endif %}</div>
+          <div class="actions">
+            {% if gmail_ok %}<button class="btn primary" name="then" value="gmail" data-busy="Creating Gmail draft…">{{ icon("mail") }}Save &amp; create Gmail draft</button>{% endif %}
+            {% if placeholder not in current.body %}<a class="btn {{ '' if gmail_ok else 'primary' }}" href="{{ compose }}" target="_blank" rel="noopener">{{ icon("external") }}Open in Gmail</a>{% endif %}
+            <button class="btn" name="then" value="save" data-busy="Saving…">Save</button>
+            <button class="btn" name="then" value="sent" title="Click after you've sent it" data-busy="Marking sent…">{{ icon("check") }}Mark sent</button>
+          </div>
+        </form>
+        <form method="post" action="/contacts/{{ contact.id }}/draft" style="margin-top:8px">{{ csrf_field() }}<button class="btn ghost sm" data-busy="Writing draft…" data-note="Your local model is writing the draft. This usually takes 10 to 60 seconds.">{{ icon("sparkles") }}Rewrite draft</button></form>
+        {% elif not can_email %}
+          <div class="empty">{{ icon("ban") }}<div>No more emails: this contact is {{ "on the do-not-contact list" if contact.do_not_contact else stage_labels[contact.stage]|lower }}.</div></div>
+        {% elif contact.email %}
+          <div class="empty">{{ icon("sparkles") }}<div style="margin-bottom:12px">{{ "Ready for message " ~ (sent_list|length + 1) if sent_list else "Ready to write the first email" }}.</div>
+            <form method="post" action="/contacts/{{ contact.id }}/draft">{{ csrf_field() }}<button class="btn primary" data-busy="Writing draft…" data-note="Your local model is writing the draft. This usually takes 10 to 60 seconds.">{{ icon("sparkles") }}Write draft</button></form></div>
+        {% else %}
+          <div class="empty">{{ icon("mail") }}<div>Find an email address first.</div></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>Status</h2></div>
+      <div class="card-body">
+        <form method="post" action="/contacts/{{ contact.id }}/action" class="actions">{{ csrf_field() }}
+          <button class="btn sm" name="action" value="replied">{{ icon("reply") }}They replied</button>
+          <button class="btn sm" name="action" value="bounced">{{ icon("alert") }}It bounced</button>
+          {% if contact.stage == "closed" %}<button class="btn sm" name="action" value="reopen">Reopen</button>
+          {% else %}<button class="btn sm" name="action" value="close">{{ icon("x") }}Close</button>{% endif %}
+          {% if contact.do_not_contact %}<button class="btn sm" name="action" value="undnc">Allow contact</button>
+          {% else %}<button class="btn sm danger" name="action" value="dnc">{{ icon("ban") }}Do not contact</button>{% endif %}
+        </form>
+      </div>
+    </div>
+
+    {% if experience or contact.about %}
+    <div class="card">
+      <div class="card-head"><div><h2>From their profile</h2><p>Used to personalise the draft</p></div></div>
+      <div class="card-body">
+        {% if experience %}<ul class="timeline">{% for e in experience %}
+          <li><div class="t">{{ e.title }}</div><div class="s">{{ e.company }}{% if e.dates %} · {{ e.dates }}{% endif %}</div></li>{% endfor %}</ul>{% endif %}
+        {% if contact.about %}<h3 style="margin:6px 0">About</h3><div class="about">{{ contact.about[:600] }}{% if contact.about|length > 600 %}…{% endif %}</div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <form class="card" method="post" action="/contacts/{{ contact.id }}">{{ csrf_field() }}
+      <div class="card-head"><h2>Details</h2></div>
+      <div class="card-body">
+        <div class="field"><label>Full name</label><input type="text" name="full_name" value="{{ contact.full_name }}" required></div>
+        <div class="grid-2">
+          <div class="field"><label>Title</label><input type="text" name="title" value="{{ contact.title or '' }}"></div>
+          <div class="field"><label>Company</label><input type="text" name="company_name" value="{{ company.name if company else '' }}"></div>
+          <div class="field"><label>Role</label><select name="role"><option value="">–</option>
+            {% for r in roles %}<option value="{{ r }}" {{ "selected" if contact.role == r }}>{{ r.replace('_', ' ')|capitalize }}</option>{% endfor %}</select></div>
+          <div class="field"><label>Location</label><input type="text" name="location" value="{{ contact.location or '' }}"></div>
+        </div>
+        <div class="field"><label>LinkedIn URL</label><input type="text" name="linkedin_url" value="{{ contact.linkedin_url or '' }}"></div>
+        <div class="field"><label>Something specific about them</label><input type="text" name="notes" value="{{ contact.notes or '' }}" placeholder="Their talk, post, launch...">
+          <span class="help">The draft opens with this.</span></div>
+      </div>
+      <div class="card-foot"><button class="btn">Save details</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

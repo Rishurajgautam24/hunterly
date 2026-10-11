@@ -1,0 +1,4 @@
+{% macro csrf_field() %}<input type="hidden" name="csrf" value="{{ csrf }}">{% endmacro %}
+{% macro status_chip(status) %}{% if status %}<span class="chip {{ status }}">{{ status.replace('_', '-') }}</span>{% endif %}{% endmacro %}
+{% macro stage_chip(stage) %}<span class="chip stage-{{ stage }}">{{ stage_labels.get(stage, stage) }}</span>{% endmacro %}
+{% macro avatar(name, size="") %}<span class="avatar {{ size }} {{ name|hue }}">{{ name|initials }}</span>{% endmacro %}

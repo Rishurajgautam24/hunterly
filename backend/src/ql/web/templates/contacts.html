@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field, status_chip, stage_chip, avatar with context %}{% from "_icons.html" import icon %}
+{% block title %}Contacts{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Contacts</h1><p>{{ contacts|length }} {{ stage_labels[stage]|lower if stage else "in total" }}</p></div>
+  <div class="actions">
+    <a class="btn {{ 'primary' if not stage }} sm" href="/contacts">All</a>
+    {% for s in stages %}<a class="btn sm {{ 'primary' if stage == s }}" href="/contacts?stage={{ s }}">{{ stage_labels[s] }}</a>{% endfor %}
+    <a class="btn" href="/export/contacts.csv{{ '?stage=' ~ stage if stage }}">{{ icon("download") }}Export CSV</a>
+    <a class="btn primary" href="/contacts/new">{{ icon("plus") }}Add contact</a>
+  </div>
+</div>
+<div class="card">
+  {% if contacts %}
+  <table class="table">
+    <thead><tr><th>Person</th><th>Company</th><th>Stage</th><th>Email</th><th>Updated</th></tr></thead>
+    <tbody>
+    {% for c in contacts %}
+      <tr><td><div class="who">{{ avatar(c.full_name, "sm") }}<div><a href="/contacts/{{ c.id }}">{{ c.full_name }}</a>
+            <div class="cell-sub">{{ c.title or "" }}</div></div></div></td>
+        <td>{{ companies.get(c.company_id, "") }}</td>
+        <td>{{ stage_chip(c.stage) }}{% if c.do_not_contact %} <span class="chip invalid">do not contact</span>{% endif %}</td>
+        <td><form class="row-edit" method="post" action="/contacts/{{ c.id }}/email">{{ csrf_field() }}
+              <input type="hidden" name="next" value="/contacts{{ '?stage=' ~ stage if stage }}"><input type="hidden" name="check" value="1">
+              <input type="email" name="address" value="{{ c.email or '' }}" placeholder="type an email" required>
+              <button class="btn sm" title="Save and check" data-busy="Checking…" data-note="Saving the address and checking it with their mail server (up to 30 seconds).">Save</button>{{ status_chip(c.email_status) }}</form></td>
+        <td class="cell-sub">{{ c.updated_at|local("%d %b") }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="empty">{{ icon("users") }}<div>No contacts{% if stage %} in this stage{% endif %} yet. Open a LinkedIn profile with the extension, or <a href="/contacts/new">add one by hand</a>.</div></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf_field with context %}{% from "_icons.html" import icon %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Settings</h1><p>About you (used in every draft) and how QL is wired up.</p></div></div>
+<div class="layout-2">
+  <form class="card" method="post" action="/settings">{{ csrf_field() }}
+    <div class="card-head"><div><h2>About me</h2><p>Every draft uses this</p></div></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field"><label>My name</label><input type="text" name="my_name" value="{{ profile.my_name }}"></div>
+        <div class="field"><label>Target role</label><input type="text" name="target_role" value="{{ profile.target_role }}" placeholder="Backend Engineer"></div>
+      </div>
+      <div class="field"><label>One line about what I do</label><input type="text" name="my_pitch" value="{{ profile.my_pitch }}" placeholder="a backend engineer who cut API latency 40% at ...">
+        <span class="help">Finishes the sentence "I'm {{ profile.my_name or 'Rishu' }}, ..."</span></div>
+      <div class="field"><label>Links to my work</label><input type="text" name="my_links" value="{{ profile.my_links }}" placeholder="github.com/..., portfolio"></div>
+      <div class="field"><label>Signature</label><textarea name="signature" style="min-height:100px">{{ profile.signature }}</textarea></div>
+    </div>
+    <div class="card-foot"><button class="btn primary">Save</button></div>
+  </form>
+  <div class="stack">
+  <form class="card" method="post" action="/settings/hunter">{{ csrf_field() }}
+    <div class="card-head"><div><h2>Hunter backup checker</h2><p>Used when your network blocks mail-server checks, or a domain accepts every address</p></div>
+      <span class="chip {{ 'valid' if hunter_set else 'unchecked' }}">{{ "key saved" if hunter_set else "not set" }}</span></div>
+    <div class="card-body">
+      <div class="field"><label>Hunter API key</label><input type="text" name="hunter_api_key" placeholder="{{ 'saved, paste a new one to replace' if hunter_set else 'paste your key' }}">
+        <span class="help">Free plan: 50 credits a month. Sign up at hunter.io, then copy the key from API keys. A find costs 1 credit only when Hunter returns an address. Leave empty and save to remove it.</span></div>
+    </div>
+    <div class="card-foot"><button class="btn primary">Save key</button></div>
+  </form>
+  <div class="card">
+    <div class="card-head"><h2>Services</h2></div>
+    <div class="card-body">
+      <dl class="kv" style="grid-template-columns: 120px 1fr">
+        <dt>Drafts</dt><dd><span class="dot {{ 'on' if ollama_ok else 'off' }}" style="display:inline-block;margin-right:6px"></span>Ollama {{ ollama }}<div class="cell-sub mono">{{ settings.ollama_url }}</div></dd>
+        <dt>Gmail</dt><dd>{% if gmail_ok %}Connected (drafts only){% else %}Not connected. Put a "Desktop app" OAuth client at <code>{{ creds_path }}</code> and run <code>uv run ql gmail-auth</code>. Until then, "Open in Gmail" works.{% endif %}</dd>
+        <dt>Mail checks</dt><dd>{{ settings.verifier_url or "From this Mac" }} · {{ settings.smtp_checks_per_domain_per_hour }} per domain per hour
+          <div style="margin-top:8px"><a class="btn sm" href="/settings?port25=1">Test port 25</a>
+          {% if port25 is not none %}<span class="chip {{ 'valid' if port25 else 'invalid' }}" style="margin-left:6px">{{ "open" if port25 else "blocked: use the verifier VM" }}</span>{% endif %}</div></dd>
+        <dt>Limits</dt><dd>{{ settings.daily_capture_cap }} captures and {{ settings.daily_first_email_cap }} first emails per 24 h · {{ settings.max_messages_per_contact }} messages per person · follow-ups on day {{ settings.followup_days|join(" and ") }}</dd>
+        <dt>Data</dt><dd><code>{{ settings.data_dir }}</code></dd>
+      </dl>
+      <p class="cell-sub" style="margin-bottom:0">Change these with QL_ variables in backend/.env.</p>
+    </div>
+  </div>
+  </div>
+</div>
+{% endblock %}

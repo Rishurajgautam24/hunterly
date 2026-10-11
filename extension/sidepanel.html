@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>QL</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo">QL</span><div><strong>QL Capture</strong><small id="conn" class="conn">Connecting…</small></div></div>
+    <div class="top-actions">
+      <button id="openTop" class="btn sm" title="Open your QL tracker">Open QL
+        <svg viewBox="0 0 24 24" class="ext"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></button>
+      <button id="gear" class="icon-btn" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section id="settings" class="card hidden">
+    <label class="row"><input type="checkbox" id="autoRead"> Read profiles automatically when I open them</label>
+    <label class="field">Backend URL<input id="backend" value="http://127.0.0.1:8765"></label>
+    <p class="hint">A different port also needs the same URL in manifest.json.</p>
+  </section>
+
+  <section id="offline" class="card empty hidden">
+    <div class="empty-icon">⚡</div>
+    <strong>QL isn't running</strong>
+    <p>Start it on your Mac, then reopen this panel:</p>
+    <code>cd backend &amp;&amp; uv run ql serve</code>
+    <button id="retry" class="btn">Try again</button>
+  </section>
+
+  <section id="where" class="card empty hidden">
+    <div class="empty-icon">in</div>
+    <strong>Open a LinkedIn profile</strong>
+    <p>QL reads the profile you're looking at and finds their work email. Nothing runs on other pages.</p>
+  </section>
+
+  <section id="profile" class="hidden">
+    <div class="card">
+      <div class="person">
+        <span id="avatar" class="avatar h0">?</span>
+        <div class="who">
+          <div class="name" id="pName">…</div>
+          <div class="headline" id="pHeadline"></div>
+          <div class="meta" id="pMeta"></div>
+        </div>
+        <button id="reread" class="icon-btn" title="Read the page again" aria-label="Read again">
+          <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        </button>
+      </div>
+      <div id="known" class="known hidden"><span id="knownText"></span><a id="knownOpen" href="#">Open in QL ›</a></div>
+      <ul id="roles" class="roles"></ul>
+      <details id="editBox" class="edit">
+        <summary>Edit details or type their email</summary>
+        <form id="form">
+          <label class="field">Email (if you know it)<input name="email" type="email" placeholder="leave empty and QL will find it"></label>
+          <label class="field">Full name<input name="full_name" required></label>
+          <label class="field">Title<input name="title"></label>
+          <label class="field">Company<input name="company_name"></label>
+          <label class="field">Location<input name="location"></label>
+          <label class="field">Headline<input name="headline"></label>
+          <label class="field">Something specific about them<input name="notes" placeholder="Their talk, post or launch"></label>
+        </form>
+      </details>
+      <button id="go" class="btn primary block">Save &amp; find email</button>
+    </div>
+
+    <div id="domainCard" class="card hidden">
+      <strong class="label">Which email domain does <span id="dCompany"></span> use?</strong>
+      <div id="chips" class="chips"></div>
+      <div class="inline">
+        <input id="domain" placeholder="company.com">
+        <button id="setDomain" class="btn">Use</button>
+      </div>
+    </div>
+
+    <div id="resultCard" class="card hidden">
+      <div id="working" class="working hidden"><span class="spinner"></span><span id="workingText">Checking with their mail server…</span></div>
+      <div id="emailBox" class="email hidden">
+        <div class="email-row"><span id="email" class="addr"></span><button id="edit" class="btn sm">Edit</button><button id="copy" class="btn sm">Copy</button></div>
+        <div id="editRow" class="inline hidden" style="margin-top:8px">
+          <input id="emailInput" type="email" placeholder="name@company.com">
+          <button id="saveEmail" class="btn primary">Check &amp; save</button>
+        </div>
+        <div id="emailStatus"></div>
+        <ul id="others" class="others"></ul>
+      </div>
+      <p id="note" class="hint"></p>
+      <div class="two">
+        <a id="openQL" class="btn" target="_blank" rel="noopener">Open in QL</a>
+        <a id="draftQL" class="btn primary" target="_blank" rel="noopener">Write email</a>
+      </div>
+    </div>
+  </section>
+
+  <p id="msg" class="msg"></p>
+
+  <footer class="foot">
+    <div class="meter-label"><span>Captures today</span><span id="capText">–</span></div>
+    <div class="meter"><span id="capBar"></span></div>
+  </footer>
+
+  <script src="extract.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
