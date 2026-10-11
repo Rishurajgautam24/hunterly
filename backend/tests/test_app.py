@@ -3,7 +3,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from ql.app import app
+from hunterly.app import app
 
 
 @pytest.fixture

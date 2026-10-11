@@ -1,13 +1,13 @@
-"""Command line: `uv run ql serve`, `uv run ql gmail-auth`, `uv run ql check example.com ...`."""
+"""Command line: `uv run hunterly serve`, `gmail-auth`, `port25`, `check example.com ...`."""
 
 import argparse
 import json
 
-from ql.config import get_settings
+from hunterly.config import get_settings
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="ql", description="QL job-search contact finder")
+    parser = argparse.ArgumentParser(prog="hunterly", description="Hunterly job-search contact finder")
     sub = parser.add_subparsers(dest="cmd", required=True)
     serve = sub.add_parser("serve", help="run the web tracker and extension API")
     serve.add_argument("--reload", action="store_true")
@@ -21,18 +21,18 @@ def main() -> None:
     if args.cmd == "serve":
         import uvicorn
 
-        print(f"QL running at http://{settings.host}:{settings.port}  (data: {settings.data_dir})")
-        uvicorn.run("ql.app:app", host=settings.host, port=settings.port, reload=args.reload)
+        print(f"Hunterly running at http://{settings.host}:{settings.port}  (data: {settings.data_dir})")
+        uvicorn.run("hunterly.app:app", host=settings.host, port=settings.port, reload=args.reload)
     elif args.cmd == "gmail-auth":
-        from ql.gmail import authorize
+        from hunterly.gmail import authorize
 
         print(f"Saved Gmail token to {authorize()}")
     elif args.cmd == "port25":
-        from ql.finder.smtp_check import port25_reachable
+        from hunterly.finder.smtp_check import port25_reachable
 
         print("open" if port25_reachable() else "blocked (use the verifier VM; see README)")
     elif args.cmd == "check":
-        from ql.finder.verifier import verify
+        from hunterly.finder.verifier import verify
 
         domain = args.addresses[0].rsplit("@", 1)[-1]
         print(json.dumps(verify(domain, args.addresses).to_dict(), indent=2))

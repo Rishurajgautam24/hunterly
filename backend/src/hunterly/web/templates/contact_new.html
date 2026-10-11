@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% from "_macros.html" import csrf_field with context %}{% from "_icons.html" import icon %}
 {% block title %}Add contact{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Add a contact</h1><p>Faster: open their LinkedIn profile with the QL extension and it fills this in for you.</p></div></div>
+<div class="page-head"><div><h1>Add a contact</h1><p>Faster: open their LinkedIn profile with the Hunterly extension and it fills this in for you.</p></div></div>
 <div class="layout-2">
 <form class="card" method="post" action="/contacts">{{ csrf_field() }}
   <div class="card-body">

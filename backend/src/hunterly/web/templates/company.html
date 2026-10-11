@@ -22,7 +22,7 @@
       {% else %}<div class="empty">No one yet.</div>{% endfor %}
     </div>
     <div class="card">
-      <div class="card-head"><div><h2>Known addresses</h2><p>Real addresses at {{ company.domain or "this domain" }} (website, press page, GitHub, a signature). Each one teaches QL the naming pattern.</p></div></div>
+      <div class="card-head"><div><h2>Known addresses</h2><p>Real addresses at {{ company.domain or "this domain" }} (website, press page, GitHub, a signature). Each one teaches Hunterly the naming pattern.</p></div></div>
       {% for k in known %}<div class="list-row"><div class="grow"><div style="font-weight:600">{{ k.full_name }}</div><div class="cell-sub mono">{{ k.address }}</div></div><span class="cell-sub">{{ k.source or "" }}</span></div>
       {% endfor %}
       {% if company.domain %}

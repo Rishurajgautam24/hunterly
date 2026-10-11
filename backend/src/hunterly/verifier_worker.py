@@ -1,8 +1,8 @@
 """The verifier service for the cloud VM (where outbound port 25 is open).
 
-Run on the VM:   QL_VERIFIER_KEY=... QL_SMTP_HELO_HOST=vm.example.com uv run ql-verifier
+Run on the VM:   HUNTERLY_VERIFIER_KEY=... HUNTERLY_SMTP_HELO_HOST=vm.example.com uv run hunterly-verifier
 Reach it from the Mac through an SSH tunnel (ssh -L 8766:127.0.0.1:8766 vm) and set
-QL_VERIFIER_URL=http://127.0.0.1:8766 and the same QL_VERIFIER_KEY in the backend's .env.
+HUNTERLY_VERIFIER_URL=http://127.0.0.1:8766 and the same HUNTERLY_VERIFIER_KEY in the backend's .env.
 """
 
 import os
@@ -12,11 +12,11 @@ import uvicorn
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
-from ql.config import get_settings
-from ql.finder.domains import normalize_domain
-from ql.finder.smtp_check import RateLimiter, verify_domain
+from hunterly.config import get_settings
+from hunterly.finder.domains import normalize_domain
+from hunterly.finder.smtp_check import RateLimiter, verify_domain
 
-app = FastAPI(title="QL verifier", docs_url=None, redoc_url=None)
+app = FastAPI(title="Hunterly verifier", docs_url=None, redoc_url=None)
 _limiter: RateLimiter | None = None
 
 
@@ -26,7 +26,7 @@ class VerifyRequest(BaseModel):
 
 
 def require_key(authorization: str = Header(default="")) -> None:
-    expected = os.environ.get("QL_VERIFIER_KEY", "")
+    expected = os.environ.get("HUNTERLY_VERIFIER_KEY", "")
     given = authorization.removeprefix("Bearer ").strip()
     if not expected or not secrets.compare_digest(given, expected):
         raise HTTPException(status_code=401, detail="bad or missing key")
@@ -54,8 +54,8 @@ def verify(req: VerifyRequest) -> dict:
 
 
 def main() -> None:
-    if not os.environ.get("QL_VERIFIER_KEY"):
-        raise SystemExit("Set QL_VERIFIER_KEY before starting the verifier.")
-    host = os.environ.get("QL_VERIFIER_HOST", "127.0.0.1")
-    port = int(os.environ.get("QL_VERIFIER_PORT", "8766"))
+    if not os.environ.get("HUNTERLY_VERIFIER_KEY"):
+        raise SystemExit("Set HUNTERLY_VERIFIER_KEY before starting the verifier.")
+    host = os.environ.get("HUNTERLY_VERIFIER_HOST", "127.0.0.1")
+    port = int(os.environ.get("HUNTERLY_VERIFIER_PORT", "8766"))
     uvicorn.run(app, host=host, port=port)

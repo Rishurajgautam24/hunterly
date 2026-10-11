@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
-from ql.config import get_settings
+from hunterly.config import get_settings
 
 _engine: Engine | None = None
 
@@ -18,7 +18,7 @@ def get_engine() -> Engine:
         _engine = create_engine(
             f"sqlite:///{settings.db_path}", connect_args={"check_same_thread": False}
         )
-        from ql import models  # noqa: F401  (register tables)
+        from hunterly import models  # noqa: F401  (register tables)
 
         SQLModel.metadata.create_all(_engine)
         _add_missing_columns(_engine)
@@ -37,7 +37,7 @@ def _add_missing_columns(engine: Engine) -> None:
 
 
 def reset_engine() -> None:
-    """Forget the cached engine (used by tests after changing QL_DATA_DIR)."""
+    """Forget the cached engine (used by tests after changing HUNTERLY_DATA_DIR)."""
     global _engine
     if _engine is not None:
         _engine.dispose()

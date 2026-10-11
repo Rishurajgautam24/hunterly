@@ -2,10 +2,10 @@ from datetime import timedelta
 
 import pytest
 
-from ql import services
-from ql.finder.smtp_check import AddressResult, DomainReport
-from ql.models import Outreach, utcnow
-from ql.services import QLError
+from hunterly import services
+from hunterly.finder.smtp_check import AddressResult, DomainReport
+from hunterly.models import Outreach, utcnow
+from hunterly.services import HunterlyError
 
 
 @pytest.fixture
@@ -38,13 +38,13 @@ def test_headline_split_and_dedupe(session):
 
 
 def test_capture_cap(session, monkeypatch):
-    monkeypatch.setenv("QL_DAILY_CAPTURE_CAP", "2")
-    from ql.config import get_settings
+    monkeypatch.setenv("HUNTERLY_DAILY_CAPTURE_CAP", "2")
+    from hunterly.config import get_settings
     get_settings.cache_clear()
     for i in range(2):
         services.capture_from_linkedin(session, full_name=f"P {i}",
                                        linkedin_url=f"https://linkedin.com/in/p{i}")
-    with pytest.raises(QLError, match="cap"):
+    with pytest.raises(HunterlyError, match="cap"):
         services.capture_from_linkedin(session, full_name="P 3")
 
 
@@ -57,7 +57,7 @@ def test_find_email_picks_valid(session, fake_verify):
 
 def test_find_needs_domain(session):
     contact = make_contact(session, company_name="NoDomain Co", domain=None)
-    with pytest.raises(QLError, match="domain"):
+    with pytest.raises(HunterlyError, match="domain"):
         services.find_email(session, contact)
 
 
@@ -67,7 +67,7 @@ def test_full_outreach_flow(session, fake_verify):
 
     outreach, draft = services.draft_next(session, contact)
     assert draft.source == "template" and outreach.step == 1  # Ollama is not running in tests
-    with pytest.raises(QLError, match="gaps"):
+    with pytest.raises(HunterlyError, match="gaps"):
         services.mark_sent(session, outreach)
 
     services.save_outreach_text(session, outreach, "Backend role at Acme", "Hi Priya, ...")
@@ -76,7 +76,7 @@ def test_full_outreach_flow(session, fake_verify):
 
     # not due yet
     assert services.due_followups(session) == []
-    with pytest.raises(QLError, match="isn't due"):
+    with pytest.raises(HunterlyError, match="isn't due"):
         services.draft_next(session, contact)
     # day 4: follow-up 2 is due
     due = services.due_followups(session, now=utcnow() + timedelta(days=4, minutes=1))
@@ -88,7 +88,7 @@ def test_full_outreach_flow(session, fake_verify):
 
     services.mark_replied(session, contact)
     assert services.due_followups(session, now=utcnow() + timedelta(days=30)) == []
-    with pytest.raises(QLError):
+    with pytest.raises(HunterlyError):
         services.draft_next(session, contact)
     stats = services.stats(session)
     assert stats["reply_rate"] == 100.0 and stats["contacted"] == 1
@@ -108,7 +108,7 @@ def test_three_message_limit(session, fake_verify):
         services.save_outreach_text(session, o, "s", "b")
         services.mark_sent(session, o)
         backdate(session, o, days=10)
-    with pytest.raises(QLError, match="limit"):
+    with pytest.raises(HunterlyError, match="limit"):
         services.draft_next(session, contact)
 
 
@@ -132,7 +132,7 @@ def test_do_not_contact_blocks_drafts(session, fake_verify):
     contact = make_contact(session)
     services.find_email(session, contact)
     services.set_do_not_contact(session, contact)
-    with pytest.raises(QLError, match="do-not-contact"):
+    with pytest.raises(HunterlyError, match="do-not-contact"):
         services.draft_next(session, contact)
 
 
@@ -143,7 +143,7 @@ def test_csv_import(session):
 
 
 def test_known_email_must_match_domain(session):
-    with pytest.raises(QLError):
+    with pytest.raises(HunterlyError):
         services.add_known_email(session, "acme.com", "Rohit", "rohit@other.com")
 
 
@@ -184,18 +184,18 @@ def test_mark_sent_guards(session, fake_verify):
     services.find_email(session, contact)
     o, _ = services.draft_next(session, contact)
     services.save_outreach_text(session, o, "[[target role]] at Acme", "Hi")
-    with pytest.raises(QLError, match="gaps"):
+    with pytest.raises(HunterlyError, match="gaps"):
         services.mark_sent(session, o)
     services.save_outreach_text(session, o, "Role at Acme", "Hi")
     services.mark_replied(session, contact)
-    with pytest.raises(QLError):
+    with pytest.raises(HunterlyError):
         services.mark_sent(session, o)
     assert contact.stage == "replied"
 
 
 def test_cap_counts_sends(session, fake_verify, monkeypatch):
-    monkeypatch.setenv("QL_DAILY_FIRST_EMAIL_CAP", "1")
-    from ql.config import get_settings
+    monkeypatch.setenv("HUNTERLY_DAILY_FIRST_EMAIL_CAP", "1")
+    from hunterly.config import get_settings
     get_settings.cache_clear()
     a = make_contact(session)
     b = make_contact(session, full_name="Rohit Gupta", linkedin_url="https://linkedin.com/in/rg")
@@ -208,7 +208,7 @@ def test_cap_counts_sends(session, fake_verify, monkeypatch):
     for o in (oa, ob):
         services.save_outreach_text(session, o, "s", "b")
     services.mark_sent(session, oa)
-    with pytest.raises(QLError, match="first emails"):
+    with pytest.raises(HunterlyError, match="first emails"):
         services.mark_sent(session, ob)
 
 
@@ -244,16 +244,16 @@ def test_domain_suggestions_use_linkedin_slug(session, monkeypatch):
 def test_old_database_gets_new_columns(tmp_path, monkeypatch):
     import sqlite3
 
-    from ql import db
-    from ql.config import get_settings
+    from hunterly import db
+    from hunterly.config import get_settings
 
     data = tmp_path / "old"
     data.mkdir()
-    con = sqlite3.connect(data / "ql.db")
+    con = sqlite3.connect(data / "hunterly.db")
     con.execute("CREATE TABLE contact (id INTEGER PRIMARY KEY, full_name VARCHAR NOT NULL)")
     con.commit()
     con.close()
-    monkeypatch.setenv("QL_DATA_DIR", str(data))
+    monkeypatch.setenv("HUNTERLY_DATA_DIR", str(data))
     get_settings.cache_clear()
     db.reset_engine()
     with db.get_engine().connect() as conn:
@@ -262,8 +262,8 @@ def test_old_database_gets_new_columns(tmp_path, monkeypatch):
 
 
 def test_recapture_updates_without_using_cap_and_drops_bad_company(session, monkeypatch):
-    monkeypatch.setenv("QL_DAILY_CAPTURE_CAP", "1")
-    from ql.config import get_settings
+    monkeypatch.setenv("HUNTERLY_DAILY_CAPTURE_CAP", "1")
+    from hunterly.config import get_settings
     get_settings.cache_clear()
     url = "https://www.linkedin.com/in/deepak/"
     bad, _ = services.capture_from_linkedin(
@@ -293,12 +293,12 @@ def test_set_email_by_hand_learns_and_updates_drafts(session, fake_verify):
                                      linkedin_url="https://linkedin.com/in/rohit")
     services.find_email(session, other, check=False)
     assert other.email == "rgupta1@acme.com"  # learned {f}{last}{n} from the address above
-    with pytest.raises(QLError):
+    with pytest.raises(HunterlyError):
         services.set_email(session, contact, "not an email")
 
 
 def test_hunter_fallback_when_checks_fail(session, monkeypatch):
-    from ql.finder import hunter
+    from hunterly.finder import hunter
 
     def unknown(domain, addresses):
         return DomainReport(domain, None, None, [AddressResult(a, "unknown") for a in addresses],

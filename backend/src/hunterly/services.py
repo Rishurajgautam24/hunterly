@@ -10,15 +10,15 @@ from datetime import datetime, timedelta
 
 from sqlmodel import Session, col, func, select
 
-from ql import drafts, gmail
-from ql.config import get_settings
-from ql.finder import hunter
-from ql.finder.domains import has_mail_server, normalize_domain, suggest_domains
-from ql.finder.names import name_parts, split_name
-from ql.finder.patterns import rank_candidates
-from ql.finder.smtp_check import ACCEPT_ALL, INVALID, UNKNOWN, VALID, DomainReport
-from ql.finder.verifier import verify
-from ql.models import (
+from hunterly import drafts, gmail
+from hunterly.config import get_settings
+from hunterly.finder import hunter
+from hunterly.finder.domains import has_mail_server, normalize_domain, suggest_domains
+from hunterly.finder.names import name_parts, split_name
+from hunterly.finder.patterns import rank_candidates
+from hunterly.finder.smtp_check import ACCEPT_ALL, INVALID, UNKNOWN, VALID, DomainReport
+from hunterly.finder.verifier import verify
+from hunterly.models import (
     Capture,
     Company,
     Contact,
@@ -36,7 +36,7 @@ WEBMAIL = {"gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "outlook.c
            "aol.com", "zoho.com"}
 
 
-class QLError(Exception):
+class HunterlyError(Exception):
     """A rule was broken (cap reached, do-not-contact, missing data). Shown to the user."""
 
 
@@ -81,7 +81,7 @@ def explain(error: str | None, domain: str) -> str | None:
                 "connections and says nothing about this address. The result stays unknown. "
                 "For real checks, add a Hunter key in Settings or use the verifier VM.")
     if "port 25" in low or "timed out" in low or "timeout" in low or "refused" in low:
-        return (f"QL couldn't reach {domain}'s mail server: your network most likely blocks port 25, "
+        return (f"Hunterly couldn't reach {domain}'s mail server: your network most likely blocks port 25, "
                 "which these checks need (common on home internet in India). The results are "
                 "pattern guesses. Add a Hunter key in Settings, or use the verifier VM.")
     if "dns" in low:
@@ -147,7 +147,7 @@ def add_known_email(session: Session, domain: str, full_name: str, address: str,
     domain = normalize_domain(domain) or ""
     address = address.strip().lower()
     if not domain or not address.endswith("@" + domain):
-        raise QLError(f"{address} is not an address at {domain or 'that domain'}")
+        raise HunterlyError(f"{address} is not an address at {domain or 'that domain'}")
     known = KnownEmail(domain=domain, full_name=full_name.strip(), address=address, source=source)
     session.add(known)
     session.commit()
@@ -199,7 +199,7 @@ def save_contact(
 ) -> tuple[Contact, bool]:
     """Create or update a contact. Returns (contact, created)."""
     if not full_name or not full_name.strip():
-        raise QLError("A name is required")
+        raise HunterlyError("A name is required")
     url = normalize_linkedin_url(linkedin_url)
     experience = [e for e in (experience or []) if e.get("title") or e.get("company")][:10]
     current = next((e for e in experience if e.get("current")), experience[0] if experience else None)
@@ -254,19 +254,19 @@ def _drop_if_orphan(session: Session, company_id: int) -> None:
 
 def delete_company(session: Session, company: Company) -> None:
     if session.exec(select(Contact).where(Contact.company_id == company.id)).first():
-        raise QLError("Move or delete its contacts first.")
+        raise HunterlyError("Move or delete its contacts first.")
     session.delete(company)
     session.commit()
 
 
 def capture_from_linkedin(session: Session, **data) -> tuple[Contact, bool]:
     """Save a profile captured by the extension. New people count towards the daily cap;
-    updating someone already in QL does not."""
+    updating someone already in Hunterly does not."""
     url = normalize_linkedin_url(data.get("linkedin_url"))
     existing = session.exec(select(Contact).where(Contact.linkedin_url == url)).first() if url else None
     cap = get_settings().daily_capture_cap
     if existing is None and captures_last_24h(session) >= cap:
-        raise QLError(f"Daily capture cap reached ({cap} new people in 24 hours). Try again tomorrow.")
+        raise HunterlyError(f"Daily capture cap reached ({cap} new people in 24 hours). Try again tomorrow.")
     contact, created = save_contact(session, source="linkedin", **data)
     if created:
         session.add(Capture(url=contact.linkedin_url))
@@ -325,9 +325,9 @@ LOCKED_STAGES = ("contacted", "replied", "closed")
 def find_email(session: Session, contact: Contact, check: bool = True) -> FinderOutcome:
     company = session.get(Company, contact.company_id) if contact.company_id else None
     if company is None or not company.domain:
-        raise QLError("Add the company's email domain first (for example acme.com).")
+        raise HunterlyError("Add the company's email domain first (for example acme.com).")
     if not contact.first_name:
-        raise QLError("The contact needs at least a first name.")
+        raise HunterlyError("The contact needs at least a first name.")
 
     known = [(k.full_name, k.address) for k in
              session.exec(select(KnownEmail).where(KnownEmail.domain == company.domain))]
@@ -420,11 +420,11 @@ def find_email(session: Session, contact: Contact, check: bool = True) -> Finder
 
 def set_email(session: Session, contact: Contact, address: str, check: bool = True,
               learn: bool = False) -> EmailCandidate:
-    """Use an address you typed or edited. Optionally check it, and optionally teach QL the
+    """Use an address you typed or edited. Optionally check it, and optionally teach Hunterly the
     company's pattern from it (also done automatically when the check says it's valid)."""
     address = address.strip().lower()
     if not EMAIL_RE.match(address):
-        raise QLError(f"'{address}' doesn't look like an email address.")
+        raise HunterlyError(f"'{address}' doesn't look like an email address.")
     domain = address.rsplit("@", 1)[1]
     status, detail = "unchecked", "typed by you"
     if check:
@@ -474,7 +474,7 @@ def set_email(session: Session, contact: Contact, address: str, check: bool = Tr
 def choose_email(session: Session, contact: Contact, candidate_id: int) -> None:
     cand = session.get(EmailCandidate, candidate_id)
     if not cand or cand.contact_id != contact.id:
-        raise QLError("That address doesn't belong to this contact")
+        raise HunterlyError("That address doesn't belong to this contact")
     contact.email, contact.email_status = cand.address, cand.status
     if contact.stage == "new":
         contact.stage = "ready"
@@ -513,11 +513,11 @@ def next_due(settings, sent: list[Outreach]) -> datetime | None:
 
 def _check_can_email(contact: Contact) -> None:
     if contact.do_not_contact:
-        raise QLError("This contact is on the do-not-contact list.")
+        raise HunterlyError("This contact is on the do-not-contact list.")
     if contact.stage in ("replied", "closed"):
-        raise QLError(f"This contact is {contact.stage}; no more emails.")
+        raise HunterlyError(f"This contact is {contact.stage}; no more emails.")
     if not contact.email:
-        raise QLError("Find or choose an email address first.")
+        raise HunterlyError("Find or choose an email address first.")
 
 
 def _has_placeholders(outreach: Outreach) -> bool:
@@ -532,14 +532,14 @@ def draft_next(session: Session, contact: Contact) -> tuple[Outreach, drafts.Dra
     sent = _sent(history)
     step = len(sent) + 1
     if step > settings.max_messages_per_contact:
-        raise QLError(f"Already sent {len(sent)} messages; the limit is "
+        raise HunterlyError(f"Already sent {len(sent)} messages; the limit is "
                       f"{settings.max_messages_per_contact}.")
     due = next_due(settings, sent)
     if due and due > utcnow():
         local = due.astimezone().strftime("%d %b")
-        raise QLError(f"Follow-up {step} isn't due until {local}. Give them time to reply.")
+        raise HunterlyError(f"Follow-up {step} isn't due until {local}. Give them time to reply.")
     if step == 1 and first_emails_last_24h(session) >= settings.daily_first_email_cap:
-        raise QLError(f"Daily cap of {settings.daily_first_email_cap} new first emails reached.")
+        raise HunterlyError(f"Daily cap of {settings.daily_first_email_cap} new first emails reached.")
     pending = next((o for o in history if o.step == step and not o.sent_at), None)
 
     company = session.get(Company, contact.company_id) if contact.company_id else None
@@ -560,7 +560,7 @@ def draft_next(session: Session, contact: Contact) -> tuple[Outreach, drafts.Dra
 
 def save_outreach_text(session: Session, outreach: Outreach, subject: str, body: str) -> None:
     if outreach.sent_at:
-        raise QLError("Already sent; it can't be edited.")
+        raise HunterlyError("Already sent; it can't be edited.")
     outreach.subject, outreach.body = subject.strip(), body.strip()
     session.add(outreach)
     session.commit()
@@ -568,7 +568,7 @@ def save_outreach_text(session: Session, outreach: Outreach, subject: str, body:
 
 def push_to_gmail(session: Session, outreach: Outreach) -> str:
     if _has_placeholders(outreach):
-        raise QLError("Fill in the [[gaps]] in the draft first.")
+        raise HunterlyError("Fill in the [[gaps]] in the draft first.")
     contact = session.get(Contact, outreach.contact_id)
     _check_can_email(contact)
     sent = _sent(outreach_for(session, contact))
@@ -583,14 +583,14 @@ def push_to_gmail(session: Session, outreach: Outreach) -> str:
 
 def mark_sent(session: Session, outreach: Outreach) -> None:
     if outreach.sent_at:
-        raise QLError("Already marked sent.")
+        raise HunterlyError("Already marked sent.")
     if _has_placeholders(outreach):
-        raise QLError("This draft still has [[gaps]]; edit it before marking it sent.")
+        raise HunterlyError("This draft still has [[gaps]]; edit it before marking it sent.")
     contact = session.get(Contact, outreach.contact_id)
     _check_can_email(contact)
     cap = get_settings().daily_first_email_cap
     if outreach.step == 1 and first_emails_last_24h(session) >= cap:
-        raise QLError(f"You've already sent {cap} first emails in 24 hours. Send this one tomorrow.")
+        raise HunterlyError(f"You've already sent {cap} first emails in 24 hours. Send this one tomorrow.")
     outreach.sent_at = utcnow()
     contact.stage = "contacted"
     contact.updated_at = utcnow()

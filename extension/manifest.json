@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "QL Capture",
+  "name": "Hunterly Capture",
   "version": "0.1.0",
-  "description": "Personal job-search helper: capture the LinkedIn profile you're viewing, on click, into your local QL tracker.",
-  "action": { "default_title": "Open QL" },
+  "description": "Personal job-search helper: capture the LinkedIn profile you're viewing, on click, into your local Hunterly tracker.",
+  "action": { "default_title": "Open Hunterly" },
   "side_panel": { "default_path": "sidepanel.html" },
   "background": { "service_worker": "background.js" },
   "permissions": ["sidePanel", "scripting", "storage"],

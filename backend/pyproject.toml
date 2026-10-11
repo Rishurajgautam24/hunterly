@@ -1,7 +1,7 @@
 [project]
-name = "ql"
+name = "hunterly"
 version = "0.1.0"
-description = "QL: personal job-search contact finder (backend + web tracker)"
+description = "Hunterly: personal job-search contact finder (backend + web tracker)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -18,8 +18,8 @@ dependencies = [
 ]
 
 [project.scripts]
-ql = "ql.cli:main"
-ql-verifier = "ql.verifier_worker:main"
+hunterly = "hunterly.cli:main"
+hunterly-verifier = "hunterly.verifier_worker:main"
 
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13.0"]

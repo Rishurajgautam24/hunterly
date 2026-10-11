@@ -13,12 +13,12 @@ What's in this first build (the PRD's MVP plus the extension):
 | Area | What it does |
 | --- | --- |
 | Capture | Side-panel extension. With the panel open, it reads the LinkedIn profile you're viewing: name, headline, title, company, location, About and up to 6 roles. One click saves it and finds the email. It only reads pages you open (no crawling, no extra requests to LinkedIn); max 30 saves a day. Manual entry works without LinkedIn. |
-| Companies | Target list, CSV import, domain suggestions with mail-server (MX) check, "known addresses" that teach QL each company's email pattern. |
+| Companies | Target list, CSV import, domain suggestions with mail-server (MX) check, "known addresses" that teach Hunterly each company's email pattern. |
 | Email finder | Builds up to 30 candidate addresses from ~30 patterns (first.last, flast, numbered ones like ssingh1, middle initials, reversed...), ranked by what's common and by real addresses you've confirmed at that company. Checks the top 10 with the company's mail server without sending anything, and falls back to Hunter (free tier) when your network blocks that. You can edit or type any address yourself. |
 | Drafts | Local LLM through Ollama (private, free). Falls back to a fill-in template if Ollama isn't running. Drafts with `[[gaps]]` can't be sent. |
-| Sending | "Open in Gmail compose" (no setup), or real Gmail drafts through the Gmail API (drafts only — QL never sends and never reads your mail). |
+| Sending | "Open in Gmail compose" (no setup), or real Gmail drafts through the Gmail API (drafts only — Hunterly never sends and never reads your mail). |
 | Tracker | Stages, follow-ups on day 4 and 9, 3-message limit, bounce handling (switches to the next address), do-not-contact list, reply and bounce rates. |
-| Your own emails | Know the address already? Type it: in the extension under **Edit details or type their email**, on a contact's page, or straight into the Email column of the Contacts list. Tick "I know it's right" and QL learns that company's pattern for everyone else there. |
+| Your own emails | Know the address already? Type it: in the extension under **Edit details or type their email**, on a contact's page, or straight into the Email column of the Contacts list. Tick "I know it's right" and Hunterly learns that company's pattern for everyone else there. |
 | Export | **Export CSV** on the Contacts page (respects the stage filter) and on the Companies page. Opens in Excel or Google Sheets. |
 
 Not yet built (next phase): Laya classification (contact role, reply triage, draft checks, job fit), Hunter/Snov.io fallback, reading replies from Gmail.
@@ -30,7 +30,7 @@ brew install uv            # or: curl -LsSf https://astral.sh/uv/install.sh | sh
 cd backend
 uv sync                    # creates .venv with Python 3.12
 cp .env.example .env       # optional settings
-uv run ql serve            # http://127.0.0.1:8765
+uv run hunterly serve            # http://127.0.0.1:8765
 ```
 
 Open http://127.0.0.1:8765, go to **Settings** and fill in "About me" (name, target role, one-line pitch, links, signature). Every draft uses it.
@@ -40,7 +40,7 @@ Open http://127.0.0.1:8765, go to **Settings** and fill in "About me" (name, tar
 ```bash
 brew install ollama        # or the app from ollama.com
 ollama serve               # if the app isn't already running
-ollama pull llama3.2:3b    # small enough for a MacBook Air; set QL_OLLAMA_MODEL to change
+ollama pull llama3.2:3b    # small enough for a MacBook Air; set HUNTERLY_OLLAMA_MODEL to change
 ```
 
 The dashboard shows whether Ollama is ready. Without it you still get the template.
@@ -49,8 +49,8 @@ The dashboard shows whether Ollama is ready. Without it you still get the templa
 
 1. Chrome → `chrome://extensions` → turn on **Developer mode**.
 2. **Load unpacked** → choose the `extension` folder.
-3. Pin "QL Capture" and click it to open the side panel. Open any LinkedIn profile: the panel fills itself in.
-4. Click **Save & find email**. If QL doesn't know the company's email domain yet, pick one of the suggested domains (or type it), and the email check runs straight away.
+3. Pin "Hunterly Capture" and click it to open the side panel. Open any LinkedIn profile: the panel fills itself in.
+4. Click **Save & find email**. If Hunterly doesn't know the company's email domain yet, pick one of the suggested domains (or type it), and the email check runs straight away.
 
 The panel only reads the profile tab you're looking at, while it's open (turn auto-read off under the settings icon to read on demand). It talks only to `127.0.0.1:8765`. If a field comes out wrong, open **Edit details** before saving; LinkedIn changes its page layout from time to time.
 
@@ -59,11 +59,11 @@ The panel only reads the profile tab you're looking at, while it's open (turn au
 Checking an address means talking to the company's mail server on port 25. Many home ISPs block that port. Test it:
 
 ```bash
-uv run ql port25           # "open" or "blocked"
-uv run ql check someone@company.com other@company.com
+uv run hunterly port25           # "open" or "blocked"
+uv run hunterly check someone@company.com other@company.com
 ```
 
-If it's **open**, you're done; consider setting `QL_SMTP_HELO_HOST` and `QL_SMTP_MAIL_FROM` to a domain you own, since some servers distrust `localhost`.
+If it's **open**, you're done; consider setting `HUNTERLY_SMTP_HELO_HOST` and `HUNTERLY_SMTP_MAIL_FROM` to a domain you own, since some servers distrust `localhost`.
 
 If it's **blocked**, run the verifier on a small cloud VM whose provider allows outbound port 25 (many big clouds block it too — check first):
 
@@ -72,15 +72,15 @@ If it's **blocked**, run the verifier on a small cloud VM whose provider allows 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 # copy the backend folder to the VM, then:
 cd backend && uv sync
-QL_VERIFIER_KEY=<long random string> QL_SMTP_HELO_HOST=<vm hostname> uv run ql-verifier   # listens on 127.0.0.1:8766
+HUNTERLY_VERIFIER_KEY=<long random string> HUNTERLY_SMTP_HELO_HOST=<vm hostname> uv run hunterly-verifier   # listens on 127.0.0.1:8766
 
 # on the Mac: tunnel to it, then add to backend/.env
 ssh -N -L 8766:127.0.0.1:8766 you@your-vm
-#   QL_VERIFIER_URL=http://127.0.0.1:8766
-#   QL_VERIFIER_KEY=<same string>
+#   HUNTERLY_VERIFIER_URL=http://127.0.0.1:8766
+#   HUNTERLY_VERIFIER_KEY=<same string>
 ```
 
-**Hunter backup (recommended if port 25 is blocked):** sign up free at hunter.io (50 credits a month), copy your API key, and paste it on QL's Settings page. When the mail-server check can't answer, QL asks Hunter instead (1 credit, only charged when Hunter returns an address).
+**Hunter backup (recommended if port 25 is blocked):** sign up free at hunter.io (50 credits a month), copy your API key, and paste it on Hunterly's Settings page. When the mail-server check can't answer, Hunterly asks Hunter instead (1 credit, only charged when Hunter returns an address).
 
 Statuses: **valid** (server confirmed), **accept-all** (server accepts everything, so it's the best guess), **unknown** (no answer: greylisting, blocks, port 25), **invalid** (server said no such mailbox). Without port 25, use **Guess only** — candidates are still ranked by pattern, and adding a few known addresses at the company makes the top guess much better.
 
@@ -88,10 +88,10 @@ Statuses: **valid** (server confirmed), **accept-all** (server accepts everythin
 
 1. Google Cloud console → new project → enable the **Gmail API**.
 2. OAuth consent screen: External, add yourself as a test user.
-3. Credentials → OAuth client ID → **Desktop app** → download JSON to `~/.ql/credentials.json`.
-4. `uv run ql gmail-auth` and approve. Only the `gmail.compose` scope is requested.
+3. Credentials → OAuth client ID → **Desktop app** → download JSON to `~/.hunterly/credentials.json`.
+4. `uv run hunterly gmail-auth` and approve. Only the `gmail.compose` scope is requested.
 
-Then the contact page shows **Save and create Gmail draft**. You still press send in Gmail, then click **Mark sent** in QL.
+Then the contact page shows **Save and create Gmail draft**. You still press send in Gmail, then click **Mark sent** in Hunterly.
 
 ## Daily routine
 
@@ -99,13 +99,13 @@ Then the contact page shows **Save and create Gmail draft**. You still press sen
 2. Add 3–5 companies; set their domains.
 3. Capture 1–2 hiring managers per company (not recruiters).
 4. Find email → write draft → add one specific detail → send from Gmail → **Mark sent**.
-5. When someone answers: **They replied**. If it bounces: **It bounced** (QL moves to the next address). If they say no: **Do not contact**.
+5. When someone answers: **They replied**. If it bounces: **It bounced** (Hunterly moves to the next address). If they say no: **Do not contact**.
 
 ## Guardrails (built in)
 
 - LinkedIn: reads only the profile you're viewing (no crawling, scrolling or extra requests), saves only on click, 30 saves a day.
 - Email: at most 20 new first emails a day, 3 messages per person, no open tracking, nothing sent automatically.
-- Data stays in `~/.ql/ql.db` on your Mac. The web app only answers on 127.0.0.1, forms carry a per-install token, and the extension API accepts JSON from the extension only.
+- Data stays in `~/.hunterly/hunterly.db` on your Mac. The web app only answers on 127.0.0.1, forms carry a per-install token, and the extension API accepts JSON from the extension only.
 
 ## Development
 
@@ -115,7 +115,7 @@ uv run pytest              # 51 tests
 uv run ruff check src tests
 ```
 
-Layout: `backend/src/ql/` — `app.py` (pages + API), `services.py` (rules), `finder/` (names, patterns, domains, SMTP check, verifier), `drafts.py` (Ollama + template), `gmail.py`, `verifier_worker.py` (VM service). `extension/` — MV3 side panel.
+Layout: `backend/src/hunterly/` — `app.py` (pages + API), `services.py` (rules), `finder/` (names, patterns, domains, SMTP check, verifier), `drafts.py` (Ollama + template), `gmail.py`, `verifier_worker.py` (VM service). `extension/` — MV3 side panel.
 
 ## Contributing
 

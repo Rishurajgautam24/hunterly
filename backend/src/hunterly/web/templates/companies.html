@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% from "_macros.html" import csrf_field, avatar with context %}{% from "_icons.html" import icon %}
 {% block title %}Companies{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Companies</h1><p>Your target list. Each needs an email domain before QL can find addresses there.</p></div>
+<div class="page-head"><div><h1>Companies</h1><p>Your target list. Each needs an email domain before Hunterly can find addresses there.</p></div>
   <div class="actions"><a class="btn" href="/export/companies.csv">{{ icon("download") }}Export CSV</a></div></div>
 <div class="card" style="margin-bottom:20px">
   {% if companies %}

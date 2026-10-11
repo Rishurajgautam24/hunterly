@@ -1,9 +1,9 @@
-"""Run the mail-server check here, or on the verifier VM when QL_VERIFIER_URL is set."""
+"""Run the mail-server check here, or on the verifier VM when HUNTERLY_VERIFIER_URL is set."""
 
 import httpx
 
-from ql.config import get_settings
-from ql.finder.smtp_check import UNKNOWN, AddressResult, DomainReport, RateLimiter, verify_domain
+from hunterly.config import get_settings
+from hunterly.finder.smtp_check import UNKNOWN, AddressResult, DomainReport, RateLimiter, verify_domain
 
 _limiter: RateLimiter | None = None
 

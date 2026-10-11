@@ -1,5 +1,5 @@
 /* global qlExtractProfile */
-// QL side panel: reads the LinkedIn profile you're viewing, saves it to your local QL,
+// Hunterly side panel: reads the LinkedIn profile you're viewing, saves it to your local Hunterly,
 // and finds a checked work email. Talks only to your own backend.
 
 const $ = (id) => document.getElementById(id);
@@ -39,20 +39,20 @@ async function api(path, opts = {}) {
   });
   let data = null;
   try { data = await res.json(); } catch { /* no body */ }
-  if (!res.ok) throw new Error((data && data.detail) || `QL error ${res.status}`);
+  if (!res.ok) throw new Error((data && data.detail) || `Hunterly error ${res.status}`);
   return data;
 }
 
 async function checkBackend() {
   try {
     const h = await api("/api/health");
-    $("conn").textContent = "Connected to QL";
+    $("conn").textContent = "Connected to Hunterly";
     $("conn").className = "conn ok";
     $("capText").textContent = `${h.captures_24h} of ${h.capture_cap}`;
     $("capBar").style.width = `${Math.min(100, (100 * h.captures_24h) / h.capture_cap)}%`;
     return h;
   } catch {
-    $("conn").textContent = "QL not running";
+    $("conn").textContent = "Hunterly not running";
     $("conn").className = "conn err";
     return null;
   }
@@ -151,7 +151,7 @@ async function lookupKnown() {
     state.known = k;
     state.contactId = k.contact_id;
     const stage = { new: "New", ready: "Email found", contacted: "Contacted", replied: "Replied", closed: "Closed" }[k.stage] || k.stage;
-    $("knownText").textContent = `Already in QL · ${stage}`;
+    $("knownText").textContent = `Already in Hunterly · ${stage}`;
     show("known", true);
     setLinks(k.page);
     if (k.email) showEmail({ email: k.email, status: k.email_status, candidates: [], messages: [] });
@@ -200,7 +200,7 @@ async function go() {
   msg("");
   try {
     if (!state.data && !state.known) await doRead();
-    // Always send what's on the page: new people are saved, people already in QL get updated
+    // Always send what's on the page: new people are saved, people already in Hunterly get updated
     // (updates don't count towards the daily limit).
     const body = collect();
     if (!body.full_name) throw new Error("No name found. Open 'Edit details' and type it.");
@@ -210,7 +210,7 @@ async function go() {
     state.known = { contact_id: r.contact_id, domain: r.domain, page: r.page, company: r.company,
                     title: r.title, email };
     setLinks(r.page);
-    $("knownText").textContent = r.created ? "Saved to QL" : "Updated in QL";
+    $("knownText").textContent = r.created ? "Saved to Hunterly" : "Updated in Hunterly";
     show("known", true);
     state.dirty = false;
     checkBackend();

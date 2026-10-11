@@ -4,7 +4,7 @@ import secrets
 
 from fastapi import HTTPException
 
-from ql.config import get_settings
+from hunterly.config import get_settings
 
 _secret: str | None = None
 

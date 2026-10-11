@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>QL</title>
+  <title>Hunterly</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand"><span class="logo">QL</span><div><strong>QL Capture</strong><small id="conn" class="conn">Connecting…</small></div></div>
+    <div class="brand"><span class="logo">Hunterly</span><div><strong>Hunterly Capture</strong><small id="conn" class="conn">Connecting…</small></div></div>
     <div class="top-actions">
-      <button id="openTop" class="btn sm" title="Open your QL tracker">Open QL
+      <button id="openTop" class="btn sm" title="Open your Hunterly tracker">Open Hunterly
         <svg viewBox="0 0 24 24" class="ext"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></button>
       <button id="gear" class="icon-btn" title="Settings" aria-label="Settings">
         <svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
@@ -25,16 +25,16 @@
 
   <section id="offline" class="card empty hidden">
     <div class="empty-icon">⚡</div>
-    <strong>QL isn't running</strong>
+    <strong>Hunterly isn't running</strong>
     <p>Start it on your Mac, then reopen this panel:</p>
-    <code>cd backend &amp;&amp; uv run ql serve</code>
+    <code>cd backend &amp;&amp; uv run hunterly serve</code>
     <button id="retry" class="btn">Try again</button>
   </section>
 
   <section id="where" class="card empty hidden">
     <div class="empty-icon">in</div>
     <strong>Open a LinkedIn profile</strong>
-    <p>QL reads the profile you're looking at and finds their work email. Nothing runs on other pages.</p>
+    <p>Hunterly reads the profile you're looking at and finds their work email. Nothing runs on other pages.</p>
   </section>
 
   <section id="profile" class="hidden">
@@ -50,12 +50,12 @@
           <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
         </button>
       </div>
-      <div id="known" class="known hidden"><span id="knownText"></span><a id="knownOpen" href="#">Open in QL ›</a></div>
+      <div id="known" class="known hidden"><span id="knownText"></span><a id="knownOpen" href="#">Open in Hunterly ›</a></div>
       <ul id="roles" class="roles"></ul>
       <details id="editBox" class="edit">
         <summary>Edit details or type their email</summary>
         <form id="form">
-          <label class="field">Email (if you know it)<input name="email" type="email" placeholder="leave empty and QL will find it"></label>
+          <label class="field">Email (if you know it)<input name="email" type="email" placeholder="leave empty and Hunterly will find it"></label>
           <label class="field">Full name<input name="full_name" required></label>
           <label class="field">Title<input name="title"></label>
           <label class="field">Company<input name="company_name"></label>
@@ -89,7 +89,7 @@
       </div>
       <p id="note" class="hint"></p>
       <div class="two">
-        <a id="openQL" class="btn" target="_blank" rel="noopener">Open in QL</a>
+        <a id="openQL" class="btn" target="_blank" rel="noopener">Open in Hunterly</a>
         <a id="draftQL" class="btn primary" target="_blank" rel="noopener">Write email</a>
       </div>
     </div>

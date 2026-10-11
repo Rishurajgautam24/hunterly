@@ -1,6 +1,6 @@
 # Contributing to Hunterly
 
-Thanks for your interest in QL. Issues and pull requests are welcome.
+Thanks for your interest in Hunterly. Issues and pull requests are welcome.
 
 ## Getting started
 

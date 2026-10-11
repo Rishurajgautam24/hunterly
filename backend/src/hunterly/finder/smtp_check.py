@@ -16,7 +16,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 
-from ql.finder.domains import MXLookupError, mx_hosts
+from hunterly.finder.domains import MXLookupError, mx_hosts
 
 VALID, INVALID, ACCEPT_ALL, UNKNOWN = "valid", "invalid", "accept_all", "unknown"
 
@@ -174,7 +174,7 @@ def _probe(host, domain, addresses, helo_host, mail_from, timeout, smtp_factory,
                     results.append(AddressResult(rest, UNKNOWN, code, text[:200]))
                 return DomainReport(domain, host, None, results, error=text[:300])
 
-        probe = f"ql-check-{secrets.token_hex(5)}@{domain}"
+        probe = f"hunterly-check-{secrets.token_hex(5)}@{domain}"
         try:
             pcode, pmsg = smtp.rcpt(probe)
             verdict = classify(pcode, _text(pmsg))

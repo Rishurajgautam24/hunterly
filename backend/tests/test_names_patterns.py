@@ -1,6 +1,6 @@
-from ql.finder.domains import normalize_domain, suggest_domains
-from ql.finder.names import clean_full_name, local_part, split_name
-from ql.finder.patterns import infer_patterns, parse_size, rank_candidates, render
+from hunterly.finder.domains import normalize_domain, suggest_domains
+from hunterly.finder.names import clean_full_name, local_part, split_name
+from hunterly.finder.patterns import infer_patterns, parse_size, rank_candidates, render
 
 
 def test_split_name_cleans_linkedin_noise():
@@ -50,7 +50,7 @@ def test_domains():
 def test_broken_resolver_is_reported(monkeypatch):
     import pytest
 
-    from ql.finder import domains
+    from hunterly.finder import domains
 
     monkeypatch.setattr(domains, "_resolve_mx", lambda d, t: [])
     monkeypatch.setattr(domains, "_canary", None)
@@ -60,7 +60,7 @@ def test_broken_resolver_is_reported(monkeypatch):
 
 
 def test_real_no_mx_when_resolver_is_fine(monkeypatch):
-    from ql.finder import domains
+    from hunterly.finder import domains
 
     monkeypatch.setattr(domains, "_resolve_mx", lambda d, t: ["mx.google.com"] if d == "gmail.com" else [])
     monkeypatch.setattr(domains, "_canary", None)
@@ -85,6 +85,6 @@ def test_numbered_and_middle_candidates_exist():
 
 
 def test_name_parts():
-    from ql.finder.names import name_parts
+    from hunterly.finder.names import name_parts
     assert name_parts("Sandeep Kumar Singh") == ("Sandeep", "Kumar", "Singh")
     assert name_parts("Priya Sharma") == ("Priya", "", "Sharma")

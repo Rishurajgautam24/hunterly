@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import httpx
 
-from ql.config import get_settings
+from hunterly.config import get_settings
 
 PLACEHOLDER = "[["  # template gaps look like [[add ...]]; a draft containing one can't be sent
 

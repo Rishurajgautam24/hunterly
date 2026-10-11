@@ -1,4 +1,4 @@
-"""Settings, read from environment variables prefixed QL_ (or a .env file)."""
+"""Settings, read from environment variables prefixed HUNTERLY_ (or a .env file)."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -7,10 +7,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="QL_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="HUNTERLY_", env_file=".env", extra="ignore")
 
     # Where the SQLite file, Gmail token and install secret live.
-    data_dir: Path = Path.home() / ".ql"
+    data_dir: Path = Path.home() / ".hunterly"
 
     # Web server (bind to localhost only).
     host: str = "127.0.0.1"
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
 
     @property
     def db_path(self) -> Path:
-        return self.data_dir / "ql.db"
+        return self.data_dir / "hunterly.db"
 
     @property
     def mail_from(self) -> str:

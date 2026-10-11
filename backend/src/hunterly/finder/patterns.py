@@ -9,7 +9,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ql.finder.names import local_part, name_parts
+from hunterly.finder.names import local_part, name_parts
 
 # Likelihood of each pattern when there is no evidence for the domain (roughly how common
 # each is across companies). Evidence from known addresses at the domain outweighs these.

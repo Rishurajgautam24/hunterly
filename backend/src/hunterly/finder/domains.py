@@ -6,7 +6,7 @@ import time
 import dns.exception
 import dns.resolver
 
-from ql.finder.names import local_part
+from hunterly.finder.names import local_part
 
 _DOMAIN_RE = re.compile(r"^(?=.{4,253}$)([a-z0-9](-?[a-z0-9])*\.)+[a-z]{2,63}$")
 _COMPANY_SUFFIXES = {

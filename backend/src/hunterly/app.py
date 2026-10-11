@@ -13,12 +13,12 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, col, select
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from ql import __version__, drafts, gmail, services
-from ql.config import get_settings
-from ql.db import get_session
-from ql.finder.domains import has_mail_server, normalize_domain
-from ql.finder.smtp_check import port25_reachable, port25_status
-from ql.models import (
+from hunterly import __version__, drafts, gmail, services
+from hunterly.config import get_settings
+from hunterly.db import get_session
+from hunterly.finder.domains import has_mail_server, normalize_domain
+from hunterly.finder.smtp_check import port25_reachable, port25_status
+from hunterly.models import (
     ROLES,
     STAGE_LABELS,
     STAGES,
@@ -28,12 +28,12 @@ from ql.models import (
     KnownEmail,
     Outreach,
 )
-from ql.security import check_csrf, install_secret
-from ql.services import QLError
+from hunterly.security import check_csrf, install_secret
+from hunterly.services import HunterlyError
 
 WEB = Path(__file__).parent / "web"
 
-app = FastAPI(title="QL", version=__version__, docs_url="/api/docs", redoc_url=None)
+app = FastAPI(title="Hunterly", version=__version__, docs_url="/api/docs", redoc_url=None)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"])
 app.add_middleware(
     CORSMiddleware,
@@ -71,7 +71,7 @@ SessionDep = Depends(get_session)
 
 
 def render(request: Request, name: str, **ctx) -> HTMLResponse:
-    from ql.db import get_engine
+    from hunterly.db import get_engine
 
     if "ollama" not in ctx:
         ctx["ollama"] = drafts.ollama_status()
@@ -111,7 +111,7 @@ def dashboard(request: Request, session: Session = SessionDep):
         board[stage] = {"count": len(rows), "people": rows[:8]}
     profile = services.get_profile(session)
     ollama = drafts.ollama_status()
-    from ql.finder import smtp_check
+    from hunterly.finder import smtp_check
 
     blocked = smtp_check.last_policy_block is not None
     checks_ok = bool(settings.verifier_url or services.hunter_key(session)) or \
@@ -209,7 +209,7 @@ def company_known(company_id: int, full_name: str = Form(...), address: str = Fo
     company = _get(session, Company, company_id)
     try:
         services.add_known_email(session, company.domain or "", full_name, address, source or None)
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(f"/companies/{company_id}", err=str(exc))
     return back(f"/companies/{company_id}", msg="Known address added; it now steers the pattern")
 
@@ -220,7 +220,7 @@ def company_delete(company_id: int, csrf: str = Form(""), session: Session = Ses
     company = _get(session, Company, company_id)
     try:
         services.delete_company(session, company)
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(f"/companies/{company_id}", err=str(exc))
     return back("/companies", msg=f"Deleted {company.name}")
 
@@ -250,7 +250,7 @@ def contact_create(full_name: str = Form(...), company_name: str = Form(""), dom
             session, full_name=full_name, company_name=company_name or None,
             domain=domain or None, title=title or None, linkedin_url=linkedin_url or None,
             location=location or None, notes=notes or None)
-    except QLError as exc:
+    except HunterlyError as exc:
         return back("/contacts/new", err=str(exc))
     return back(f"/contacts/{contact.id}", msg="Contact added" if created else "Contact updated")
 
@@ -279,7 +279,7 @@ def contact_update(contact_id: int, full_name: str = Form(...), title: str = For
                    csrf: str = Form(""), session: Session = SessionDep):
     check_csrf(csrf)
     contact = _get(session, Contact, contact_id)
-    from ql.finder.names import split_name
+    from hunterly.finder.names import split_name
 
     contact.full_name = full_name.strip()
     contact.first_name, contact.last_name = split_name(full_name)
@@ -300,7 +300,7 @@ def contact_find(contact_id: int, check: str = Form("1"), csrf: str = Form(""),
     contact = _get(session, Contact, contact_id)
     try:
         outcome = services.find_email(session, contact, check=check == "1")
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(f"/contacts/{contact_id}", err=str(exc))
     best = outcome.best
     msg = (f"Best guess: {best.address} ({best.status.replace('_', '-')})" if best
@@ -319,10 +319,10 @@ def contact_set_email(contact_id: int, address: str = Form(...), check: str = Fo
     url = next if next.startswith("/") and not next.startswith("//") else f"/contacts/{contact_id}"
     try:
         row = services.set_email(session, contact, address, check=bool(check), learn=bool(learn))
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(url, err=str(exc))
     status = row.status.replace("_", "-")
-    learned = ". QL will learn the company's pattern from it." if learn or row.status == "valid" else ""
+    learned = ". Hunterly will learn the company's pattern from it." if learn or row.status == "valid" else ""
     note = services.explain(row.detail, row.address.rsplit("@", 1)[1]) if row.status == "unknown" else None
     return back(url, msg=f"{contact.full_name}: now using {row.address} ({status}){learned}"
                 + (f" {note}" if note and check else ""))
@@ -331,14 +331,14 @@ def contact_set_email(contact_id: int, address: str = Form(...), check: str = Fo
 @app.get("/export/contacts.csv")
 def export_contacts(stage: str = "", session: Session = SessionDep) -> Response:
     data = services.export_contacts_csv(session, stage if stage in STAGES else None)
-    name = f"ql-contacts{'-' + stage if stage in STAGES else ''}-{datetime.now():%Y-%m-%d}.csv"
+    name = f"hunterly-contacts{'-' + stage if stage in STAGES else ''}-{datetime.now():%Y-%m-%d}.csv"
     return Response(data, media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @app.get("/export/companies.csv")
 def export_companies(session: Session = SessionDep) -> Response:
-    name = f"ql-companies-{datetime.now():%Y-%m-%d}.csv"
+    name = f"hunterly-companies-{datetime.now():%Y-%m-%d}.csv"
     return Response(services.export_companies_csv(session), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
@@ -349,7 +349,7 @@ def contact_choose(contact_id: int, candidate_id: int = Form(...), csrf: str = F
     check_csrf(csrf)
     try:
         services.choose_email(session, _get(session, Contact, contact_id), candidate_id)
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(f"/contacts/{contact_id}", err=str(exc))
     return back(f"/contacts/{contact_id}", msg="Address chosen")
 
@@ -359,7 +359,7 @@ def contact_draft(contact_id: int, csrf: str = Form(""), session: Session = Sess
     check_csrf(csrf)
     try:
         outreach, draft = services.draft_next(session, _get(session, Contact, contact_id))
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(f"/contacts/{contact_id}", err=str(exc))
     note = f"Draft for message {outreach.step} written by {draft.source}"
     return back(f"/contacts/{contact_id}", msg=note + (f". {draft.note}" if draft.note else ""))
@@ -409,7 +409,7 @@ def outreach_save(outreach_id: int, subject: str = Form(...), body: str = Form(.
         if then == "sent":
             services.mark_sent(session, outreach)
             return back(url, msg=f"Message {outreach.step} marked sent")
-    except QLError as exc:
+    except HunterlyError as exc:
         return back(url, err=str(exc))
     except Exception as exc:  # Gmail API errors
         return back(url, err=f"Gmail error: {exc}")
@@ -505,7 +505,7 @@ def api_capture(data: CaptureIn, session: Session = SessionDep) -> dict:
 
     try:
         contact, created = services.capture_from_linkedin(session, **data.model_dump())
-    except QLError as exc:
+    except HunterlyError as exc:
         raise HTTPException(status_code=429 if "cap" in str(exc) else 400, detail=str(exc)) from exc
     settings = get_settings()
     company = session.get(Company, contact.company_id) if contact.company_id else None
@@ -524,7 +524,7 @@ def api_find(contact_id: int, session: Session = SessionDep) -> dict:
     contact = _get(session, Contact, contact_id)
     try:
         outcome = services.find_email(session, contact)
-    except QLError as exc:
+    except HunterlyError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"email": contact.email, "status": contact.email_status, "messages": outcome.messages,
             "candidates": [{"address": c.address, "status": c.status, "pattern": c.pattern}
@@ -552,7 +552,7 @@ def api_set_email(contact_id: int, data: EmailIn, session: Session = SessionDep)
     contact = _get(session, Contact, contact_id)
     try:
         row = services.set_email(session, contact, data.address, check=data.check)
-    except QLError as exc:
+    except HunterlyError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     domain = row.address.rsplit("@", 1)[1]
     note = services.explain(row.detail, domain) if row.status == "unknown" else None

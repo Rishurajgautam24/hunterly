@@ -1,8 +1,8 @@
 """Gmail: create drafts through the Gmail API, or build a compose link that needs no setup.
 
 Setup for the API (optional): create a Google Cloud OAuth client of type "Desktop app",
-download it as credentials.json into the data folder (~/.ql), then run `uv run ql gmail-auth`.
-Only the gmail.compose scope is requested: QL can create drafts but never reads your mail.
+download it as credentials.json into the data folder (~/.hunterly), then run `uv run hunterly gmail-auth`.
+Only the gmail.compose scope is requested: Hunterly can create drafts but never reads your mail.
 """
 
 import base64
@@ -10,7 +10,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from urllib.parse import urlencode
 
-from ql.config import get_settings
+from hunterly.config import get_settings
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
 

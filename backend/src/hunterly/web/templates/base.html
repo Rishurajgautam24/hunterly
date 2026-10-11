@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}QL{% endblock %} · QL</title>
+  <title>{% block title %}Hunterly{% endblock %} · Hunterly</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 {% set path = request.url.path %}
 <div class="app">
   <aside class="sidebar">
-    <a class="brand" href="/"><span class="logo">QL</span><span>QL<small>Job search outreach</small></span></a>
+    <a class="brand" href="/"><span class="logo">Hunterly</span><span>Hunterly<small>Job search outreach</small></span></a>
     <nav class="nav">
       <a href="/" class="{{ 'active' if path == '/' }}">{{ icon("home") }}Dashboard{% if nav_due %}<span class="count">{{ nav_due }} due</span>{% endif %}</a>
       <a href="/contacts" class="{{ 'active' if path.startswith('/contacts') and path != '/contacts/new' }}">{{ icon("users") }}Contacts</a>

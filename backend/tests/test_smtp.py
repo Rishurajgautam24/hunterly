@@ -1,6 +1,6 @@
 import smtplib
 
-from ql.finder.smtp_check import ACCEPT_ALL, INVALID, UNKNOWN, VALID, classify, verify_domain
+from hunterly.finder.smtp_check import ACCEPT_ALL, INVALID, UNKNOWN, VALID, classify, verify_domain
 
 
 def fake_smtp(replies: dict[str, int], default: int = 550, mail_code: int = 250):
@@ -98,7 +98,7 @@ def test_disconnect_mid_session():
 
 
 def test_dns_failure_is_unknown_not_invalid():
-    from ql.finder.domains import MXLookupError
+    from hunterly.finder.domains import MXLookupError
 
     def fail(domain):
         raise MXLookupError("DNS lookup for acme.com failed: Timeout")
@@ -135,7 +135,7 @@ def test_inconclusive_probe_is_not_false():
 
 
 def test_blocklisted_ip_stops_probing_and_is_explained():
-    from ql import services
+    from hunterly import services
 
     msg = (b"5.7.1 Service unavailable, Client host [103.133.159.191] blocked using Spamhaus. "
            b"To request removal from this list see https://www.spamhaus.org/query/ip/103.133.159.191")

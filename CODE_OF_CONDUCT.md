@@ -1,6 +1,6 @@
 # Code of Conduct
 
-We want QL to be a welcoming project. Contributors and maintainers pledge to treat everyone with respect, regardless of experience, background, identity, or opinion.
+We want Hunterly to be a welcoming project. Contributors and maintainers pledge to treat everyone with respect, regardless of experience, background, identity, or opinion.
 
 **Expected:** be kind and constructive, give and accept feedback gracefully, assume good intent, focus on what is best for the project.
 
