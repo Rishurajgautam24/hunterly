@@ -31,7 +31,7 @@ svg.i { width: 18px; height: 18px; flex: none; }
 .sidebar { position: sticky; top: 0; height: 100vh; background: var(--surface); border-right: 1px solid var(--line); padding: 18px 12px; display: flex; flex-direction: column; gap: 2px; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 20px; font-weight: 700; font-size: 15px; color: var(--ink); }
 .brand:hover { text-decoration: none; }
-.logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.logo { width: 30px; height: 30px; flex: none; display: block; }
 .brand small { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ink-2); font-weight: 550; }
 .nav a:hover { background: var(--surface-2); text-decoration: none; }

@@ -1,3 +1,5 @@
+<p align="center"><img src="backend/src/hunterly/web/static/logo.svg" width="96" height="96" alt="Hunterly logo"></p>
+
 <h1 align="center">Hunterly</h1>
 
 <p align="center"><b>Find the hiring manager, get their work email, and write to them directly.</b><br>
