@@ -33,7 +33,7 @@
       <dl class="kv" style="grid-template-columns: 120px 1fr">
         <dt>Drafts</dt><dd><span class="dot {{ 'on' if ollama_ok else 'off' }}" style="display:inline-block;margin-right:6px"></span>Ollama {{ ollama }}<div class="cell-sub mono">{{ settings.ollama_url }}</div></dd>
         <dt>Gmail</dt><dd>{% if gmail_ok %}Connected (drafts only){% else %}Not connected. Put a "Desktop app" OAuth client at <code>{{ creds_path }}</code> and run <code>uv run hunterly gmail-auth</code>. Until then, "Open in Gmail" works.{% endif %}</dd>
-        <dt>Mail checks</dt><dd>{{ settings.verifier_url or "From this Mac" }} · {{ settings.smtp_checks_per_domain_per_hour }} per domain per hour
+        <dt>Mail checks</dt><dd>{{ settings.verifier_url or "From this computer" }} · {{ settings.smtp_checks_per_domain_per_hour }} per domain per hour
           <div style="margin-top:8px"><a class="btn sm" href="/settings?port25=1">Test port 25</a>
           {% if port25 is not none %}<span class="chip {{ 'valid' if port25 else 'invalid' }}" style="margin-left:6px">{{ "open" if port25 else "blocked: use the verifier VM" }}</span>{% endif %}</div></dd>
         <dt>Limits</dt><dd>{{ settings.daily_capture_cap }} captures and {{ settings.daily_first_email_cap }} first emails per 24 h · {{ settings.max_messages_per_contact }} messages per person · follow-ups on day {{ settings.followup_days|join(" and ") }}</dd>

@@ -36,7 +36,7 @@ def authorize() -> Path:
         raise SystemExit(f"Put your OAuth client file at {creds_file} first (see README).")
     flow = InstalledAppFlow.from_client_secrets_file(str(creds_file), SCOPES)
     creds = flow.run_local_server(port=0)
-    token_path().write_text(creds.to_json())
+    token_path().write_text(creds.to_json(), encoding="utf-8")
     return token_path()
 
 
@@ -48,7 +48,7 @@ def _service():
     creds = Credentials.from_authorized_user_file(str(token_path()), SCOPES)
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        token_path().write_text(creds.to_json())
+        token_path().write_text(creds.to_json(), encoding="utf-8")
     return build("gmail", "v1", credentials=creds, cache_discovery=False)
 
 

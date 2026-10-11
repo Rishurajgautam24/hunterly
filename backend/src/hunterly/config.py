@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,6 +43,12 @@ class Settings(BaseSettings):
 
     # Gmail API (optional; without it the app opens Gmail's compose window instead).
     gmail_credentials_file: Path | None = None
+
+    @field_validator("data_dir", "gmail_credentials_file")
+    @classmethod
+    def _expand_home(cls, v: Path | None) -> Path | None:
+        # "~/.hunterly" in .env should mean the home folder on every OS (Windows included)
+        return v.expanduser() if v is not None else v
 
     @property
     def db_path(self) -> Path:

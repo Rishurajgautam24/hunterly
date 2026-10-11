@@ -313,3 +313,13 @@ def test_hunter_fallback_when_checks_fail(session, monkeypatch):
                         lambda d, first, last, k: hunter.HunterResult("priya@acme.com", "valid", 96))
     outcome = services.find_email(session, contact)
     assert contact.email == "priya@acme.com" and contact.email_status == "valid"
+
+
+def test_data_dir_expands_home(monkeypatch, tmp_path):
+    from pathlib import Path
+
+    from hunterly.config import get_settings
+
+    monkeypatch.setenv("HUNTERLY_DATA_DIR", "~/hunterly-test-data")
+    get_settings.cache_clear()
+    assert get_settings().data_dir == Path.home() / "hunterly-test-data"

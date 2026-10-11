@@ -1,0 +1,5 @@
+# Keep LF in the repo on every OS (Windows checkouts stay consistent)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ps1 text eol=crlf

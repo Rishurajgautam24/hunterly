@@ -10,6 +10,6 @@ labels: bug
 
 **Steps to reproduce**
 
-**Environment** (macOS version, Python version, Chrome version, Ollama on/off)
+**Environment** (OS and version: macOS / Windows / Linux, Python version, Chrome version, Ollama on/off)
 
 Please don't paste personal data or credentials.

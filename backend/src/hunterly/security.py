@@ -16,9 +16,9 @@ def install_secret() -> str:
         settings.data_dir.mkdir(parents=True, exist_ok=True)
         path = settings.data_dir / "secret.txt"
         if not path.exists():
-            path.write_text(secrets.token_urlsafe(32))
-            path.chmod(0o600)
-        _secret = path.read_text().strip()
+            path.write_text(secrets.token_urlsafe(32), encoding="utf-8")
+            path.chmod(0o600)  # owner-only on macOS/Linux; Windows only honours the read-only bit
+        _secret = path.read_text(encoding="utf-8").strip()
     return _secret
 
 

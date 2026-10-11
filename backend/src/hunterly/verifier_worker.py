@@ -1,7 +1,7 @@
 """The verifier service for the cloud VM (where outbound port 25 is open).
 
 Run on the VM:   HUNTERLY_VERIFIER_KEY=... HUNTERLY_SMTP_HELO_HOST=vm.example.com uv run hunterly-verifier
-Reach it from the Mac through an SSH tunnel (ssh -L 8766:127.0.0.1:8766 vm) and set
+Reach it from your computer through an SSH tunnel (ssh -L 8766:127.0.0.1:8766 vm) and set
 HUNTERLY_VERIFIER_URL=http://127.0.0.1:8766 and the same HUNTERLY_VERIFIER_KEY in the backend's .env.
 """
 

@@ -39,7 +39,6 @@ filterwarnings = ["ignore::DeprecationWarning:fastapi.testclient", "ignore:Using
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-cache-dir = "/tmp/ruff-cache"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
