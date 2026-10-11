@@ -1,4 +1,4 @@
-# Contributing to QL
+# Contributing to ReachOut
 
 Thanks for your interest in QL. Issues and pull requests are welcome.
 
@@ -25,7 +25,7 @@ Thanks for your interest in QL. Issues and pull requests are welcome.
 
 ## Guardrails
 
-QL is a personal, respectful-outreach tool. PRs that add LinkedIn crawling or scraping beyond the page the user is viewing, bulk or automatic email sending, open tracking, or sending data to third-party services by default will not be accepted.
+ReachOut is a personal, respectful-outreach tool. PRs that add LinkedIn crawling or scraping beyond the page the user is viewing, bulk or automatic email sending, open tracking, or sending data to third-party services by default will not be accepted.
 
 ## Reporting bugs and ideas
 

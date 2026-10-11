@@ -1,6 +1,6 @@
-# QL — personal job-search contact finder
+# ReachOut: job-search contact finder
 
-[![CI](https://github.com/Rishurajgautam24/QL/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishurajgautam24/QL/actions/workflows/ci.yml)
+[![CI](https://github.com/Rishurajgautam24/reachout/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishurajgautam24/reachout/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
