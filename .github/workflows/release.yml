@@ -1,0 +1,45 @@
+name: Release
+
+# Push a tag like v0.2.0 to publish a release. The tag must match the version in
+# extension/manifest.json and backend/pyproject.toml.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check versions match the tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          EXT=$(jq -r .version extension/manifest.json)
+          PY=$(grep -m1 '^version' backend/pyproject.toml | cut -d'"' -f2)
+          echo "tag=$TAG extension=$EXT backend=$PY"
+          test "$TAG" = "$EXT" && test "$TAG" = "$PY"
+
+      - uses: astral-sh/setup-uv@v5
+      - name: Run tests
+        working-directory: backend
+        run: uv sync && uv run pytest
+
+      - name: Build the extension zip
+        run: |
+          mkdir -p dist
+          cd extension
+          zip -r "../dist/hunterly-extension-${GITHUB_REF_NAME}.zip" . -x '*.DS_Store'
+          cd ..
+          unzip -l "dist/hunterly-extension-${GITHUB_REF_NAME}.zip"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="docs/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$NOTES" ]; then ARGS=(--notes-file "$NOTES"); else ARGS=(--generate-notes); fi
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "Hunterly ${GITHUB_REF_NAME}" "${ARGS[@]}"

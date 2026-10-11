@@ -27,6 +27,14 @@ Thanks for your interest in Hunterly. Issues and pull requests are welcome.
 
 Hunterly is a personal, respectful-outreach tool. PRs that add LinkedIn crawling or scraping beyond the page the user is viewing, bulk or automatic email sending, open tracking, or sending data to third-party services by default will not be accepted.
 
+## Releasing (maintainers)
+
+1. Bump the version in `extension/manifest.json`, `backend/pyproject.toml` and `backend/src/hunterly/__init__.py`.
+2. Add release notes at `docs/release-notes/vX.Y.Z.md`.
+3. Commit, then tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+
+The Release workflow checks the versions match the tag, runs the tests, zips the extension and publishes the GitHub release.
+
 ## Reporting bugs and ideas
 
 Use the issue templates. For security problems, see [SECURITY.md](SECURITY.md) and don't open a public issue.

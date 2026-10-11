@@ -10,6 +10,7 @@ A Chrome extension plus a small local backend. Free, open source, and private: y
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
 <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-supported-4F46E5" alt="macOS, Windows, Linux">
+<a href="https://github.com/Rishurajgautam24/hunterly/releases/latest"><img src="https://img.shields.io/github/v/release/Rishurajgautam24/hunterly?color=4F46E5&label=download" alt="Latest release"></a>
 </p>
 
 ## Watch the 60-second intro
@@ -23,7 +24,9 @@ https://github.com/user-attachments/assets/f9051241-0d4e-4964-99c4-39d9a2b1b760
 3. **Draft**: a short, personal first message, written by a local AI model (Ollama) on your machine. You review it and send it from Gmail yourself.
 4. **Track**: follow-ups on day 4 and day 9, replies, bounces and a do-not-contact list, all in one pipeline.
 
-No spam, no auto-send, no tracking pixels. Jump to [setup](#requirements) to run it in about 5 minutes.
+No spam, no auto-send, no tracking pixels.
+
+**[Download the latest release](https://github.com/Rishurajgautam24/hunterly/releases/latest)**: the extension zip plus the source code for the backend. Setup takes about 5 minutes; the steps are [below](#requirements).
 
 ## Features
 
@@ -91,8 +94,8 @@ The dashboard shows whether Ollama is ready. Without it you still get the templa
 
 ## 3. Load the extension
 
-1. Chrome → `chrome://extensions` (Edge: `edge://extensions`) → turn on **Developer mode**.
-2. **Load unpacked** → choose the `extension` folder.
+1. Download `hunterly-extension-vX.Y.Z.zip` from the [latest release](https://github.com/Rishurajgautam24/hunterly/releases/latest) and unzip it. (Working from a clone? Use the repo's `extension` folder instead.)
+2. Chrome → `chrome://extensions` (Edge: `edge://extensions`) → turn on **Developer mode** → **Load unpacked** → choose the unzipped folder.
 3. Pin "Hunterly Capture" and click it to open the side panel. Open any LinkedIn profile: the panel fills itself in.
 4. Click **Save & find email**. If Hunterly doesn't know the company's email domain yet, pick one of the suggested domains (or type it), and the email check runs straight away.
 
