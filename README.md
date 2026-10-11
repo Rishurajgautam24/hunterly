@@ -1,12 +1,29 @@
-# Hunterly: job-search contact finder
+<h1 align="center">Hunterly</h1>
 
-[![CI](https://github.com/Rishurajgautam24/hunterly/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishurajgautam24/hunterly/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<p align="center"><b>Find the hiring manager, get their work email, and write to them directly.</b><br>
+A Chrome extension plus a small local backend. Free, open source, and private: your data stays on your computer.</p>
 
-![Dashboard](docs/screenshots/dashboard.png)
+<p align="center">
+<a href="https://github.com/Rishurajgautam24/hunterly/actions/workflows/ci.yml"><img src="https://github.com/Rishurajgautam24/hunterly/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
+<img src="https://img.shields.io/badge/macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-supported-4F46E5" alt="macOS, Windows, Linux">
+</p>
 
-A Chrome extension plus a small backend that runs on your own computer (macOS, Windows or Linux). It turns the LinkedIn profile (or company) you're looking at into a checked work email for a hiring manager, a short draft written by a local model, and a tracked follow-up. Built from the "Job Search Contact Finder PRD".
+## Watch the 60-second intro
+
+https://github.com/user-attachments/assets/f9051241-0d4e-4964-99c4-39d9a2b1b760
+
+## How it works
+
+1. **Capture**: open a LinkedIn profile and the Hunterly side panel reads it. One click saves the person.
+2. **Find the email**: Hunterly tries ~30 naming patterns, learns each company's format from addresses you already know, and checks the best guesses with the company's mail server. It never sends an email to do this.
+3. **Draft**: a short, personal first message, written by a local AI model (Ollama) on your machine. You review it and send it from Gmail yourself.
+4. **Track**: follow-ups on day 4 and day 9, replies, bounces and a do-not-contact list, all in one pipeline.
+
+No spam, no auto-send, no tracking pixels. Jump to [setup](#requirements) to run it in about 5 minutes.
+
+## Features
 
 What's in this first build (the PRD's MVP plus the extension):
 
@@ -148,6 +165,8 @@ Layout: `backend/src/hunterly/` — `app.py` (pages + API), `services.py` (rules
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), then open an issue or a pull request. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Screenshots
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 | Contact page | Extension |
 | --- | --- |
